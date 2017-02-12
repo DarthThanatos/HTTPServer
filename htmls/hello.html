@@ -1,0 +1,39 @@
+<html>
+	<head>
+		<link rel="shortcut icon" type="image/ico" href="../images/favicon.ico"/>
+		<link href="../styles/red_army_style.css" rel="stylesheet" type="text/css">
+		<meta charset="utf-8">
+		<title>Site</title>
+	</head>
+	<body>
+		<h1 id="h1">Web Portfolio of IThanatos</h1>
+		<h2 id="h2">May the Force be with ya!</h2>
+		<p id="par1">Thanks for stopping by.</p>
+		<img id ="im" src="../images/murphy.png" alt="Picture of me">
+		<p>At my team, we are a community of</p>
+		<ul> 
+			<li>technologists</li>
+			<li>thinkers</li>
+			<li>builders</li>
+		</ul>
+		<a href="../htmls/animation.html">Back</a>
+		<a href="../htmls/reference.html">Forward</a>
+		<button type="button" value="virgin" onclick="everythingChanged(this)">change me</button>
+		<script src="../scripts/evCh.js"></script>
+		<script> 
+			var myHeading = document.querySelector('h1');
+			function setUserName() {
+				var myName = prompt('Please enter your name.');
+				localStorage.setItem('name', myName);
+				myHeading.textContent = 'Mozilla is cool, ' + myName;
+			}
+			if(!localStorage.getItem('name')) {
+				setUserName();
+			} else {
+				var storedName = localStorage.getItem('name');
+				myHeading.textContent = 'Welcome ' + storedName;
+			}
+		</script>
+		<script src="../scripts/refresh.js"></script>
+	</body>
+</html>

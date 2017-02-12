@@ -1,0 +1,58 @@
+<html>
+	<head>
+		<link rel="shortcut icon" type="image/ico" href="../images/favicon.ico"/>
+		<link href="../styles/animate.css" rel="stylesheet" type="text/css">
+		<meta charset="utf-8">
+		<title>Site</title>
+		<script>
+			function move(elem){
+				var left = 0;
+				function frame(){
+					left ++;
+					elem.style.left = left + 'px'
+					if(left == 530) left = 0; //clearInterval(id);
+				}
+				var id = setInterval(frame,10);
+			}
+		</script>
+
+		<script src="http://canvasjs.com/assets/script/canvasjs.min.js"></script>
+		<script type="text/javascript">
+		window.onload = function () {
+			var chart = new CanvasJS.Chart("chartContainer", {
+				theme: "theme2",//theme1
+				title:{
+					text: "Basic Column Chart - CanvasJS"              
+				},
+				animationEnabled: true,   // change to true
+				data: [              
+				{
+					// Change type to "bar", "area", "spline", "pie",etc.
+					type: "spline",
+					dataPoints: [
+						{ label: "apple",  y: 10  },
+						{ label: "orange", y: 15  },
+						{ label: "banana", y: 25  },
+						{ label: "mango",  y: 30  },
+						{ label: "grape",  y: 28  }
+					]
+				}
+				]
+			});
+			chart.render();
+		}
+		</script>
+		<script src="../scripts/require.js"></script>
+		<script>require.config({waitSeconds:0})</script>
+		<script src="../scripts/charts.js"></script>
+	</head>
+	<body>
+		<div id="chartContainer" style="height: 300px; width: 100%;"></div>
+		<a href="../htmls/hello.html">Back</a>
+		<div onclick="move(this.children[0])" class="example_path">
+			<div class="example_block"></div>
+		</div>
+		<div id="wind-speed" style="width:1600px;height:350px;"></div>
+		<!--script src="scripts/refresh.js"></script-->
+	</body>
+</html>

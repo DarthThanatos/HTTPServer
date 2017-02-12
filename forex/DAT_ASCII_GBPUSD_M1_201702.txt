@@ -1,0 +1,17 @@
+HistData.com (c) 2012
+File: DAT_ASCII_GBPUSD_M1_201702.csv Status Report
+
+Gap of 60s found between 20170201171045 and 20170201171152.
+Gap of 63s found between 20170201171610 and 20170201171720.
+Gap of 96s found between 20170201171720 and 20170201171902.
+Gap of 63s found between 20170201172329 and 20170201172439.
+Gap of 64s found between 20170201172627 and 20170201172738.
+Gap of 71s found between 20170201174118 and 20170201174236.
+Gap of 67s found between 20170201174611 and 20170201174725.
+Gap of 144s found between 20170201174945 and 20170201175216.
+Gap of 72s found between 20170202170219 and 20170202170337.
+Gap of 65s found between 20170202173912 and 20170202174024.
+Gap of 68s found between 20170202174706 and 20170202174820.
+
+Average tick interval: 5261 miliseconds.
+Maximum tick interval found: 144750 miliseconds.

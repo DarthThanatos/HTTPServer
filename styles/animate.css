@@ -1,0 +1,49 @@
+.example_path{
+	position:relative;
+	overflow:hidden;
+	width:530px;
+	height:30px;
+	border:3px solid #000;
+}
+.example_block{
+	position:absolute;
+	background-color:blue;
+	width:30px;
+	height:20px;
+	padding-top:10px;
+	color:#fff;
+}
+
+#container {
+	width: 1000px;
+	height: 500px;
+	position: relative;
+	float:top;
+	background: yellow;
+}
+
+#video{
+	position: relative;
+	float:top;
+	top:10px;
+}
+
+#link{
+	position: relative;
+	top:15px;
+	float:top;
+	left:343px;
+}
+
+.animate { /*element with id animate*/
+	width: 25px;
+	height: 50px;
+	position: absolute;
+	background: red;
+}
+
+.anchor{ /*all elements with class anchor*/
+	float:left;
+	position:relative;
+	/*left:350px;*/
+}
