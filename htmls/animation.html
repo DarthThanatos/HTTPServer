@@ -6,30 +6,34 @@
 	</head>
 	<body>
 		<div id="Box">
-			<div><h1 id="header">1000</h1></div>
-			<div id="container">
-				<p id="nameP"> Name: </p> <input type="text" id="name" placeholder="UserName">
-				<p id="passwordP"> Password: </p> <input type="text" id="password" placeholder="Password">
-				<form id="form">
+			<div id="top_block">
+				<h1 id="header">1000</h1>
+				<a id="Forward" href="../htmls/hello.html">
+					<!--p style="position: relative; left: 350px;">Forward</p-->
+					<h1>Forward</h1>
+				</a>
+			</div>
+			<div id="container" style="margin:auto;">
+				<p id="nameP" style="left:45%; top:0%; position:absolute;"> Name: </p> <input style="left:45%; position:absolute; top:8%" type="text" id="name" placeholder="UserName">
+				<p id="passwordP" style="left:45%; top:20%; position:absolute;"> Password: </p> <input type="text" id="password" style="left:45%; top:28%; position:absolute;" placeholder="Password">
+				<form id="form" style="left:45%; top:45%; position:absolute;">
 					<select id="type of game" onchange="adjust()">
 						<option>NewGame</option>
 						<option>ExistingGame</option>
 					</select>
 				</form>
-				<input type="text" id="game_id" placeholder="New Game ID">
-				<p id="new_line"></p><button type="button" id="login" onclick="login()">log in</button>
-				<p id="infoP"> Info: </p> <input type="text" id="info" readonly placeholder="Info From Server">
+				<input type="text" id="game_id" placeholder="New Game ID" style="left:45%; top:50%; position:absolute;">
+				<button type="button" style="left:45%; top:55%; position:absolute;" id="login" onclick="login()">log in</button>
+				<p id="infoP" style="left:45%; top:80%; position:absolute;"> Info: </p> <input type="text" id="info" style="left:45%; top:87%; position:absolute;" readonly placeholder="Info From Server">
+			</div>
+			<div id="chatroom">
+				<textarea id="chat_window" readonly></textarea>
+				<textarea id="chat_input"></textarea>
 			</div>
 			<div id="video">
 			<!--iframe  width="395" height="315"
 				src="https://www.youtube.com/v/4wbBIMaJA88">
 			</iframe-->
-			</div>
-			<div id="link">
-			<a href="../htmls/hello.html">
-				<!--p style="position: relative; left: 350px;">Forward</p-->
-				Forward
-			</a>
 			</div>
 		</div>
 		<script src="../scripts/jquery-3.1.1.js"></script>

@@ -4,50 +4,41 @@ import java.util.*;
 
 public class myHTTPServer extends Thread {
 
-	
 	static final String HTML_START = "";
 	static final String HTML_END = "";
 	Socket connectedClient = null;
 	BufferedReader inFromClient = null;
 	DataOutputStream outToClient = null;
 	static String fileName = "";
-	UsersDataBase udb = null;
-	GameKeeper gk = null;
+	String httpMethod;
+	String httpQueryString;
+	private StringBuffer responseBuffer = null;
 
-	public myHTTPServer(Socket client, UsersDataBase udb, GameKeeper gk) {
+	public myHTTPServer(Socket client, String fileName) {
 		connectedClient = client;
-		this.udb = udb;
-		this.gk = gk;
+		this.fileName = fileName;
+		responseBuffer = new StringBuffer();
 	}
 
-	public void logging(String httpQueryString) throws Exception{
-		System.out.println("Logging request: " + httpQueryString);
-		String userName = httpQueryString.replaceFirst("/", "").split("%20")[0];
-		String password = httpQueryString.split("%20")[1];
-		String newGame = httpQueryString.split("%20")[2];
-		String gameId = httpQueryString.split("%20")[3];
-		if(!udb.addUserToDB(userName,password)) {
-			boolean correctLogin = udb.passwordCorrect(userName,password);
-			if(!correctLogin) {
-				sendResponse(200, "Incorrect password",false);
+	protected boolean patternMatching() throws Exception{
+		if (httpMethod.equals("GET")) {
+			if (httpQueryString.equals("/")) {
+				// The default home page
+				sendResponse(200, responseBuffer.toString(), false);
+				return true;
+			} 
+			else {
+				//This is interpreted as a file name
+				String fileName = httpQueryString.replaceFirst("/", "");
+				fileName = URLDecoder.decode(fileName);
+				if (new File(fileName).isFile()){
+					sendResponse(200, fileName, true);
+					return true;
+				}
+				else return false;
 			}
 		}
-		boolean canJoin = gk.addToPair(gameId,udb.getUser(userName));
-		if (canJoin){
-			if (gk.getNoOfPlayers(gameId) == 2)
-				sendResponse(200,"Starting",false);
-			else 
-				sendResponse(200,"Waiting for another player",false);
-		}
-		else {
-			sendResponse(200,"There is no room for ya at this table",false);
-		}
-	}
-	
-	public void waitForPlayer(String httpQueryString) throws Exception{
-		String gameId = httpQueryString.split("%20")[3];
-		while(gk.getNoOfPlayers(gameId)!=2);
-		sendResponse(200,"Starting",false);
+		else return false;
 	}
 	
 	public void run() {
@@ -60,10 +51,9 @@ public class myHTTPServer extends Thread {
 			headerLine = requestString != null ? requestString  : "none";
 			
 			StringTokenizer tokenizer = new StringTokenizer(headerLine);
-			String httpMethod = tokenizer.nextToken();
-			String httpQueryString = tokenizer.nextToken();
-
-			StringBuffer responseBuffer = new StringBuffer();
+			httpMethod = tokenizer.nextToken();
+			httpQueryString = tokenizer.nextToken();
+			
 			FileReader fr = new FileReader(new File(fileName));
 			BufferedReader br = new BufferedReader(fr);
 			String murphy = "", sCurrentLine;
@@ -78,30 +68,8 @@ public class myHTTPServer extends Thread {
 				System.out.println(requestString);
 				requestString = inFromClient.readLine();
 			}
-			if (httpMethod.equals("GET")) {
-				if (httpQueryString.equals("/")) {
-					// The default home page
-					sendResponse(200, responseBuffer.toString(), false);
-				} 
-				else {
-					//This is interpreted as a file name
-					String fileName = httpQueryString.replaceFirst("/", "");
-					fileName = URLDecoder.decode(fileName);
-					if (new File(fileName).isFile()){
-						sendResponse(200, fileName, true);
-					}
-					else {
-						sendResponse(404, "<b>The Requested resource " + httpQueryString + " not found ....</b>" , false);
-					}
-				}
-			}
-			else if(httpMethod.equals("LOG")) {
-				logging(httpQueryString);
-			}
-			else if(httpMethod.equals("CANSTART")){
-				waitForPlayer(httpQueryString);
-			}
-			else {
+			boolean matched = patternMatching();
+			if (!matched){
 				System.out.println("The Requested resource " + httpQueryString + " not found ");
 				sendResponse(404, "<b>The Requested resource " + httpQueryString + " not found </b>", false);
 			}
@@ -154,22 +122,4 @@ public class myHTTPServer extends Thread {
 		fin.close();
 	}
 
-	public static void main (String args[]) throws Exception {
-		try{
-			UsersDataBase udb = new UsersDataBase();
-			GameKeeper gk = new GameKeeper();
-			String ip = args[0];
-			int port = Integer.parseInt(args[1]);
-			fileName = args[2];
-			ServerSocket Server = new ServerSocket (port, 10, InetAddress.getByName(ip));
-			System.out.println ("TCPServer Waiting for client on port " + args[1]);
-			while(true) {
-				Socket connected = Server.accept();
-				(new myHTTPServer(connected,udb,gk)).start();
-			}
-		}
-		catch(Exception e){
-			System.out.println("Usage: java myHTTPServer ip port file_path");
-		}
-	}
 }

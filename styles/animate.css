@@ -15,11 +15,13 @@
 }
 
 #container {
+	display:inline-block;
 	width: 1000px;
 	height: 500px;
 	position: relative;
 	float:top;
 	background: yellow;
+	border:3px solid #000;
 }
 
 #video{
@@ -28,11 +30,36 @@
 	top:10px;
 }
 
-#link{
-	position: relative;
-	top:15px;
+#header{
+	display:inline-block;
+	position:relative;
+}
+
+#Forward{
+	display:inline-block;
+	position:absolute;
+	float: right;
+	left:1195px;
+}
+
+#chatroom{
+	position: absolute;
+	display:inline-block;
+}
+
+#chat_window{
 	float:top;
-	left:343px;
+	top:0px;
+	position:absolute;
+	width: 300px;
+	height: 450px;
+}
+
+#chat_input{
+	position:absolute;
+	width:300px;
+	height:55px;
+	top:450px;
 }
 
 .animate { /*element with id animate*/

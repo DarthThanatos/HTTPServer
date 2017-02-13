@@ -51,8 +51,8 @@ function clearContainer(){
 		$("#"+ids[i]).remove();
 }
 
-function start(){
-	header.innerHTML = "1000";
+function start(msg){
+	header.innerHTML = msg;
 	spawnCards("green",false,75,150);
 	spawnCards("blue",true,75,150);
 }
@@ -76,29 +76,29 @@ function login(){
 		console.log("texts: "  +  request);
 		xmlHttp.open( "LOG", request, false ); // false for synchronous request
 		xmlHttp.send( null );
+		var startMsg = "1000: Player: " + username + " at table: " +   gameId + "; game mode: " + gameMode;
 		//console.log(xmlHttp.responseText);
 		switch(xmlHttp.responseText){
 			case "Waiting for another player":
 				clearContainer();
-				header.innerHTML = "1000: Waiting for another player";
+				header.innerHTML = "1000: " + username + " is waiting for another player at table: " + gameId + "; game mode: " + gameMode;
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.onreadystatechange = function() { 
 					if(xmlHttp.readyState == 4)
-						start();
+						start(startMsg);
 				}
 				xmlHttp.open("CANSTART",request,true);
 				xmlHttp.send( null );
 				break;
 			case "Starting":
 				clearContainer();
-				start();
+				start(startMsg);
 				break;
 			default:
 				info.value = xmlHttp.responseText;
 				break;
 		}
-
-
 	}
+	info.setAttribute("size", info.value.length);
 }
 

@@ -24,11 +24,13 @@ public class GameKeeper{
 	class Pair{
 		private String gameId;
 		private User[] players;
+		private HashMap<String,String> msgs;
 		private int players_added = 0;
 		
 		public Pair(String gameId, User player){
 			players = new User[2];
 			this.gameId = gameId;
+			msgs = new HashMap<String,String>();
 			players[0] = player;
 			players_added++;
 		}
