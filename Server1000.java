@@ -11,7 +11,7 @@ public class Server1000 extends myHTTPServer{
 		this.gk = gk;
 	}
 	
-	public void logging(String httpQueryString) throws Exception{
+	public void logging() throws Exception{
 		System.out.println("Logging request: " + httpQueryString);
 		String userName = httpQueryString.replaceFirst("/", "").split("%20")[0];
 		String password = httpQueryString.split("%20")[1];
@@ -36,33 +36,53 @@ public class Server1000 extends myHTTPServer{
 		}
 	}
 	
-	public void waitForPlayer(String httpQueryString) throws Exception{
+	public void withWho() throws Exception{
+		String userName = httpQueryString.replaceFirst("/", "").split("%20")[0];
+		String gameId = httpQueryString.split("%20")[3];
+		sendResponse(200, gk.getOpponentName(gameId,userName),false);
+	}
+	
+	public void waitForPlayer() throws Exception{
 		String gameId = httpQueryString.split("%20")[3];
 		while(gk.getNoOfPlayers(gameId)!=2);
 		sendResponse(200,"Starting",false);
 	}
 	
-	public void sendMsg(String httpQueryString) throws Exception{
+	public void sendMsg() throws Exception{
 		String userName = httpQueryString.replaceFirst("/", "").split("%20")[0];
 		String gameId = httpQueryString.split("%20")[3];
 		String msg = httpQueryString.split("%20")[4];
+		gk.updateHistory(gameId,userName,msg);
+		sendResponse(200,"Ok",false);
 	}
-	
-	public void waitForChat(String httpQueryString) throws Exception{
+
+	public void getMsg() throws Exception{
 		String userName = httpQueryString.replaceFirst("/", "").split("%20")[0];
 		String gameId = httpQueryString.split("%20")[3];
-		
+		sendResponse(200, gk.getHistory(gameId,userName),false);
 	}
 
 	@Override
 	public boolean patternMatching(){
 		try{
 			if(httpMethod.equals("LOG")) {
-				logging(httpQueryString);
+				logging();
 				return true;
 			}
 			else if(httpMethod.equals("CANSTART")){
-				waitForPlayer(httpQueryString);
+				waitForPlayer();
+				return true;
+			}
+			else if(httpMethod.equals("WITHWHO")){
+				withWho();
+				return true;
+			}
+			else if(httpMethod.equals("SENDMSG")){
+				sendMsg();
+				return true;
+			}
+			else if(httpMethod.equals("GETMSG")){
+				getMsg();
 				return true;
 			}
 			return super.patternMatching();

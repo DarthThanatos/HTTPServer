@@ -1,5 +1,53 @@
-function onClick(){
+function change_chat(event, input){
+	input_elem = document.getElementById("chat_input");
+	var chatInput = document.getElementById("chat_input").value;
+	var request = localStorage.getItem("request");
+	console.log(chatInput + " " + String.fromCharCode(event.which));
+	if(event.keyCode == 13) {
+		console.log("yep, enter");
+		if(chatInput.value != "\n"){
+			var sendMsg = new XMLHttpRequest();
+			sendMsg.open( "SENDMSG", request + " " + chatInput.replace(/ /g,"_"), false ); // false for synchronous request
+			sendMsg.send( null );
+			input_elem.value = "";
+		}
+	}
+}
+
+function updateChatWindow(request, responseText){
+	var chat_window = document.getElementById("chat_window");
+	chat_window.value = responseText;
+	var incomingMsgs = new XMLHttpRequest();
+	incomingMsgs.onreadystatechange = function() { 
+		if(incomingMsgs.readyState == 4)
+			updateChatWindow(request, incomingMsgs.responseText);
+	}
+	incomingMsgs.open("GETMSG",request,true);
+	incomingMsgs.send( null );
+}
+
+function onClick(request){
 	console.log(this.i);
+}
+
+function spawnChat(request){
+	var chat_window = document.createElement("TEXTAREA");
+	chat_window.readOnly = true;
+	chat_window.id = "chat_window";
+	var chat_input = document.createElement("TEXTAREA");
+	chat_input.id = "chat_input";
+	var chat_room = document.getElementById("chatroom");
+	chat_room.appendChild(chat_window);
+	chat_room.appendChild(chat_input);
+	var incomingMsgs = new XMLHttpRequest();
+	incomingMsgs.onreadystatechange = function() { 
+		if(incomingMsgs.readyState == 4)
+			updateChatWindow(request,incomingMsgs.responseText);
+	}
+	incomingMsgs.open("GETMSG",request,true);
+	incomingMsgs.send( null );
+	localStorage.setItem('request', request);
+	$("#chat_input").keypress(change_chat);
 }
 
 function spawnCards(color, player_cards, width,height){
@@ -51,8 +99,12 @@ function clearContainer(){
 		$("#"+ids[i]).remove();
 }
 
-function start(msg){
-	header.innerHTML = msg;
+function start(msg,request){
+	xmlHttp = new XMLHttpRequest();
+	xmlHttp.open( "WITHWHO", request, false ); // false for synchronous request
+	xmlHttp.send( null );
+	header.innerHTML = msg + "; playing with " + xmlHttp.responseText;
+	spawnChat(request);
 	spawnCards("green",false,75,150);
 	spawnCards("blue",true,75,150);
 }
@@ -85,14 +137,14 @@ function login(){
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.onreadystatechange = function() { 
 					if(xmlHttp.readyState == 4)
-						start(startMsg);
+						start(startMsg,request);
 				}
 				xmlHttp.open("CANSTART",request,true);
 				xmlHttp.send( null );
 				break;
 			case "Starting":
 				clearContainer();
-				start(startMsg);
+				start(startMsg,request);
 				break;
 			default:
 				info.value = xmlHttp.responseText;
@@ -101,4 +153,3 @@ function login(){
 	}
 	info.setAttribute("size", info.value.length);
 }
-
