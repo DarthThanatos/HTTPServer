@@ -1,7 +1,8 @@
 function change_chat(event, input){
 	input_elem = document.getElementById("chat_input");
 	var chatInput = document.getElementById("chat_input").value;
-	var request = localStorage.getItem("request");
+	//var request = localStorage.getItem("request");
+	var request = $("#chat_input").data("request");
 	console.log(chatInput + " " + String.fromCharCode(event.which));
 	if(event.keyCode == 13) {
 		console.log("yep, enter");
@@ -46,7 +47,8 @@ function spawnChat(request){
 	}
 	incomingMsgs.open("GETMSG",request,true);
 	incomingMsgs.send( null );
-	localStorage.setItem('request', request);
+	//localStorage.setItem('request', request);
+	$("#chat_input").data("request",request);
 	$("#chat_input").keypress(change_chat);
 }
 

@@ -44,7 +44,7 @@ public class Server1000 extends myHTTPServer{
 	
 	public void waitForPlayer() throws Exception{
 		String gameId = httpQueryString.split("%20")[3];
-		while(gk.getNoOfPlayers(gameId)!=2);
+		gk.waitForFullTable(gameId);
 		sendResponse(200,"Starting",false);
 	}
 	
