@@ -44,7 +44,7 @@ public class myHTTPServer extends Thread {
 	public void run() {
 		String headerLine = "";
 		try {
-			System.out.println( "The Client " +  connectedClient.getInetAddress() + ":" + connectedClient.getPort() + " is connected");
+			//System.out.println( "The Client " +  connectedClient.getInetAddress() + ":" + connectedClient.getPort() + " is connected");
 			inFromClient = new BufferedReader(new InputStreamReader (connectedClient.getInputStream()));
 			outToClient = new DataOutputStream(connectedClient.getOutputStream());
 			String requestString = inFromClient.readLine();
@@ -61,11 +61,11 @@ public class myHTTPServer extends Thread {
 					murphy += sCurrentLine + "\n";
 			}
 			responseBuffer.append(murphy.replace("\b", " "));
-			System.out.println("The HTTP request string is ....");
-			System.out.println("Ready: " + requestString);
+			//System.out.println("The HTTP request string is ....");
+			System.out.println(requestString);
 			while (inFromClient.ready()){
 				// Read the HTTP complete HTTP Query
-				System.out.println(requestString);
+				//System.out.println(requestString);
 				requestString = inFromClient.readLine();
 			}
 			boolean matched = patternMatching();
@@ -92,7 +92,6 @@ public class myHTTPServer extends Thread {
 		if (statusCode == 200) statusLine = "HTTP/1.1 200 OK" + "\r\n";
 		else statusLine = "HTTP/1.1 404 Not Found" + "\r\n";
 		if (isFile) {
-			System.out.println(isFile);
 			fileName = responseString;
 			fin = new FileInputStream(fileName);
 			contentLengthLine = "Content-Length: " + Integer.toString(fin.available()) + "\r\n";
@@ -107,7 +106,7 @@ public class myHTTPServer extends Thread {
 			contentLengthLine = "Content-Length: " + responseString.length() + "\r\n";
 		}
 		String header = statusLine + serverdetails + contentTypeLine + contentLengthLine + "Connection: close\r\n\r\n"; 
-		System.out.println(header);
+		//System.out.println(header);
 		if (isFile) sendFile(fin, outToClient);
 		else outToClient.writeBytes(responseString);
 		outToClient.close();

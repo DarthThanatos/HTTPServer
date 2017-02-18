@@ -8,7 +8,7 @@ public class Main{
 			String ip = args[0];
 			int port = Integer.parseInt(args[1]);
 			String fileName = args[2];
-			ServerSocket Server = new ServerSocket (port, 10, InetAddress.getByName(ip));
+			ServerSocket Server = new ServerSocket (port, 100000, InetAddress.getByName(ip));
 			System.out.println ("TCPServer Waiting for client on port " + args[1]);
 			while(true) {
 				Socket connected = Server.accept();

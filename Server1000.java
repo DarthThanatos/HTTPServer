@@ -62,6 +62,76 @@ public class Server1000 extends myHTTPServer{
 		sendResponse(200, gk.getHistory(gameId,userName),false);
 	}
 
+	public void closeGame() throws Exception{
+		String userName = httpQueryString.replaceFirst("/", "").split("%20")[0];
+		String gameId = httpQueryString.split("%20")[3];
+		gk.closeGame(gameId,userName);
+		sendResponse(200,"Ok",false);
+	}
+
+	public void doIWin() throws Exception{
+		String userName = httpQueryString.replaceFirst("/", "").split("%20")[0];
+		String gameId = httpQueryString.split("%20")[3];
+		sendResponse(200,gk.doIWin(gameId,userName),false);
+	}
+
+	public void getCards() throws Exception{
+		String userName = httpQueryString.replaceFirst("/", "").split("%20")[0];
+		String gameId = httpQueryString.split("%20")[3];
+		sendResponse(200,gk.tellCards(gameId,userName),false);
+	}
+
+	public void offer() throws Exception{
+		String userName = httpQueryString.replaceFirst("/", "").split("%20")[0];
+		String gameId = httpQueryString.split("%20")[3];		
+		int offer = Integer.parseInt(httpQueryString.split("%20")[4]);
+		sendResponse(200, gk.offer(gameId, userName, offer), false);
+	}
+
+	public void auctionTurn() throws Exception{
+		String userName = httpQueryString.replaceFirst("/", "").split("%20")[0];
+		String gameId = httpQueryString.split("%20")[3];		
+		sendResponse(200, gk.auctionTurn(gameId, userName), false);
+	}
+
+	public void bestOffer() throws Exception{
+		String userName = httpQueryString.replaceFirst("/", "").split("%20")[0];
+		String gameId = httpQueryString.split("%20")[3];		
+		sendResponse(200, gk.bestOffer(gameId,userName), false);
+	}
+	
+	public void auctionWon() throws Exception{
+		String userName = httpQueryString.replaceFirst("/", "").split("%20")[0];
+		String gameId = httpQueryString.split("%20")[3];			
+		sendResponse(200, gk.auctionWon(gameId,userName), false);
+	}
+	
+	public void heapSelected() throws Exception{
+		String userName = httpQueryString.replaceFirst("/", "").split("%20")[0];
+		String gameId = httpQueryString.split("%20")[3];			
+		sendResponse(200, gk.heapSelected(gameId,userName), false);		
+	}
+	
+	public void selectHeap() throws Exception{
+		String userName = httpQueryString.replaceFirst("/", "").split("%20")[0];
+		String gameId = httpQueryString.split("%20")[3];			
+		String heapId = httpQueryString.split("%20")[4];
+		sendResponse(200, gk.selectHeap(gameId,userName, heapId), false);		
+	}
+
+	public void changeHeap() throws Exception{
+		String userName = httpQueryString.replaceFirst("/", "").split("%20")[0];
+		String gameId = httpQueryString.split("%20")[3];			
+		String heapDesc = httpQueryString.split("%20")[4];
+		sendResponse(200, gk.changeHeap(gameId,userName, heapDesc), false);		
+	}	
+	
+	public void cardsExchanged() throws Exception{
+		String userName = httpQueryString.replaceFirst("/", "").split("%20")[0];
+		String gameId = httpQueryString.split("%20")[3];	
+		sendResponse(200, gk.cardsExchanged(gameId,userName), false);		
+	}	
+	
 	@Override
 	public boolean patternMatching(){
 		try{
@@ -85,6 +155,50 @@ public class Server1000 extends myHTTPServer{
 				getMsg();
 				return true;
 			}
+			else if(httpMethod.equals("CLOSEGAME")){
+				closeGame();
+				return true;
+			}
+			else if(httpMethod.equals("DOIWIN")){
+				doIWin();
+				return true;
+			}
+			else if(httpMethod.equals("GETCARDS")){
+				getCards();
+				return true;
+			}
+			else if(httpMethod.equals("OFFER")){
+				offer();
+				return true;
+			}		
+			else if(httpMethod.equals("AUCTIONTURN")){
+				auctionTurn();
+				return true;
+			}				
+			else if(httpMethod.equals("BESTOFFER")){
+				bestOffer();
+				return true;
+			}	
+			else if(httpMethod.equals("AUCTIONWON")){
+				auctionWon();
+				return true;
+			}
+			else if(httpMethod.equals("HEAPSELECTED")){
+				heapSelected();
+				return true;
+			}			
+			else if(httpMethod.equals("SELECTHEAP")){
+				selectHeap();
+				return true;
+			}			
+			else if(httpMethod.equals("CHANGEHEAP")){
+				changeHeap();
+				return true;
+			}	
+			else if(httpMethod.equals("CARDSEXCHANGED")){
+				cardsExchanged();
+				return true;
+			}	
 			return super.patternMatching();
 		}catch(Exception e){
 			e.printStackTrace();

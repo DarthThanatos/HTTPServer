@@ -21,7 +21,7 @@ public class UsersDataBase {
 	
 	public boolean addUserToDB(String name, String password){
 		if (!userExists(name)){
-			System.out.println("adding " + name);
+			//System.out.println("adding " + name);
 			User user = new User(name, password);
 			users.put(name, user);
 			return true;
@@ -42,9 +42,9 @@ public class UsersDataBase {
 	}
 	
 	public boolean userExists(String name){
-		System.out.println("users: ");
-		for (String key : users.keySet())
-			System.out.println(key);
+		//System.out.println("users: ");
+		//for (String key : users.keySet())
+		//	System.out.println(key);
 		if (users.containsKey(name))
 			return true;
 		else return false;
