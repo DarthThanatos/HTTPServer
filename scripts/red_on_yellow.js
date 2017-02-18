@@ -47,6 +47,22 @@ function onClick(){
 			//$("#container").data("picked_to_exchange",picked);
 			console.log($("#container").data("picked_to_exchange"));
 		}
+		if($("#container").data("phase") == "play"){
+			var playerName = $("#container").data("playerName");
+			var gameTurn = $("#container").data("playerName");
+			if(playerName == gameTurn){
+				var i = $("#" + this.id).data("i");
+				var request = $("#container").data("request");
+				var moveChangeRq = new XMLHttpRequest();
+				moveChangeRq.open("CHANGEMOVE", request + " " + i, false);
+				moveChangeRq.send(null);
+				var container_height = parseInt($("#container").css("height").replace("px",""));
+				var card_height = parseInt(this.style.height.replace("px",""));
+				this.style.top = container_height - 2*this.style.height - 20;
+				this.style.left = "45%";
+				$("#container").data("gameTurn","opponent");
+			}
+		}
 	}
 }
 
@@ -101,12 +117,16 @@ function spawnHeap(id){
 	}
 }
 
-function whoseGameTurn(request, responseText){	
+function endRound(){
 	
 }
 
 function enemyMove(request, responseText){
-	
+	var msgParts = responseText.split("@");
+	console.log(msgParts);
+	var playerName = $("#container").data("playerName");
+	$("#container").data("gameTurn", playerName);
+	//sendAsynchHTTPQuery(request, enemyMove, "PLAYERMOVECHANGE");
 }
 
 function cards_exchanged(request, responseText){
@@ -138,6 +158,8 @@ function cards_exchanged(request, responseText){
 	gameInfo.style.left = "25%";
 	gameInfo.style.position = "absolute";
 	gameInfo.style.top = "45%";	
+	document.getElementById("container").appendChild(gameInfo);
+	sendAsynchHTTPQuery(request, enemyMove, "PLAYERMOVECHANGE");
 	$("#container").data("phase","play");
 }
 
@@ -246,15 +268,19 @@ function auctionWon(request, responseText){
 	$("#bestOffer").remove();
 	var msgParts = responseText.split(" ");
 	var playerName = request.replace("/","").replace("..","").split(" ")[0];
+	$("#container").data("gameTurn", msgParts[0]);
+	$("#container").data("playerName",playerName);
 	var auctionInfo = document.getElementById("auctionInfo");
 	console.log("won" + playerName);
 	$("#container").data("auctionWinner",msgParts[0]);
 	if(msgParts[0] == playerName){
+		$("#container").data("lastInRound","opponent");
 		auctionInfo.value = "Select heap";
 		document.getElementById("leftHeapPicker").disabled = false;
 		document.getElementById("rightHeapPicker").disabled = false;
 	}
 	else{
+		$("#container").data("lastInRound",playerName);
 		auctionInfo.value = msgParts[0] + " has won the auction with score " + msgParts[1];
 	}
 	sendAsynchHTTPQuery(request,showHeap,"HEAPSELECTED");

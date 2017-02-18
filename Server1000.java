@@ -131,6 +131,12 @@ public class Server1000 extends myHTTPServer{
 		String gameId = httpQueryString.split("%20")[3];	
 		sendResponse(200, gk.cardsExchanged(gameId,userName), false);		
 	}	
+
+	public void playerMoveChange() throws Exception{
+		String userName = httpQueryString.replaceFirst("/", "").split("%20")[0];
+		String gameId = httpQueryString.split("%20")[3];	
+		sendResponse(200, gk.playerMoveChange(gameId,userName), false);		
+	}	
 	
 	@Override
 	public boolean patternMatching(){
@@ -197,6 +203,10 @@ public class Server1000 extends myHTTPServer{
 			}	
 			else if(httpMethod.equals("CARDSEXCHANGED")){
 				cardsExchanged();
+				return true;
+			}	
+			else if(httpMethod.equals("PLAYERMOVECHANGE")){
+				playerMoveChange();
 				return true;
 			}	
 			return super.patternMatching();

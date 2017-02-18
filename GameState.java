@@ -14,9 +14,11 @@ public class GameState{
 	private String[] playersNames = null;
 	private int highestOffer = 100;
 	private HashMap<String, Integer> score = null;
-	private String whoseGameTurn = null;
 	private String whoseAuctionTurn = null;
-	private final Condition myAuctionTurn, isAuctionWon, isBestOfferChanged, isHeapSelected, arePlayersCardsExchanged;
+	private final Condition myAuctionTurn, isAuctionWon;
+	private final Condition isBestOfferChanged, isHeapSelected;
+	private final Condition arePlayersCardsExchanged;
+	private final Condition isplayerMoveChanged;
 	private final Lock lock;
 	private int bestOfferVal;
 	private String auctionWinner;
@@ -26,9 +28,13 @@ public class GameState{
 	private HashMap<String, Boolean> turnsChanged;
 	private HashMap<String, Boolean> heapSelected;
 	private HashMap<String, Boolean> playersCardsExchanged;
+	private HashMap<String, Boolean> playersMoveChanged;
 	private String exchange_info;
 	private String selectedHeapId;
 	private HashMap<String,String> withWho;
+	private String gameTurn;
+	private HashMap<String, String> playerMove;
+	private String lastInRound;
 	
 	private void createPack(){
 		allCards = new String[24];
@@ -109,40 +115,68 @@ public class GameState{
 		playersCards.put(playerOne,playerOneCards);
 		playersCards.put(playerTwo, playerTwoCards);
 	}
-
+	
 	public GameState(String playerOne, String playerTwo){
 		createPack();
 		mapFiguresToValues();
 		distributeCards(playerOne,playerTwo);
+		lock = new ReentrantLock();
 		playersNames = new String[2];
 		playersNames[0] = playerOne;
 		playersNames[1] = playerTwo;
 		score = new HashMap<String, Integer>();
+		
 		bestOfferChanged = new HashMap<String,Boolean>();
 		bestOfferChanged.put(playerOne, true);
 		bestOfferChanged.put(playerTwo, true);
+		isBestOfferChanged = lock.newCondition();
+		
 		turnsChanged = new HashMap<String, Boolean>();
 		turnsChanged.put(playerOne,true);
 		turnsChanged.put(playerTwo,true);
+		myAuctionTurn = lock.newCondition();
+		
 		heapSelected = new HashMap<String, Boolean>();
 		heapSelected.put(playerOne,false);
 		heapSelected.put(playerTwo,false);
+		isHeapSelected = lock.newCondition();
+		
 		playersCardsExchanged = new HashMap<String, Boolean>();
 		playersCardsExchanged.put(playerOne,false);
 		playersCardsExchanged.put(playerTwo,false);
+		arePlayersCardsExchanged = lock.newCondition();
+		
+		playersMoveChanged = new HashMap<String,Boolean>();
+		playersMoveChanged.put(playerOne, false);
+		playersMoveChanged.put(playerTwo, false);
+		isplayerMoveChanged = lock.newCondition();
+				
 		withWho = new HashMap<String,String>();
 		withWho.put(playerOne,playerTwo);
 		withWho.put(playerTwo,playerOne);
-		whoseGameTurn = playerOne;
+		
 		whoseAuctionTurn = playerOne;
-		lock = new ReentrantLock();
-		myAuctionTurn = lock.newCondition();
-		isBestOfferChanged = lock.newCondition();
 		isAuctionWon = lock.newCondition();
-		isHeapSelected = lock.newCondition();
-		arePlayersCardsExchanged = lock.newCondition();
 		bestOfferVal = 100;
 		auctionWinner = playerOne;
+	}
+	
+	public String playerMoveChange(String userName) throws Exception{
+		lock.lock();
+		while(shouldContinue && !playersMoveChanged.get(userName)) isplayerMoveChanged.await();
+		lock.unlock();
+		return playerMove.get(userName);
+	}
+	
+	public String changeMove(String userName, String moveDesc){
+		lock.lock();
+		int opponentCardIndex = playersCards.get(userName)[Integer.parseInt(moveDesc)];
+		moveDesc += "@" + allCards[opponentCardIndex] + "@" + lastInRound;
+		playersMoveChanged.put(withWho.get(userName), true); 
+		playerMove.put(withWho.get(userName), moveDesc);
+		isplayerMoveChanged.signalAll();
+		lock.unlock();
+		return "ok";
 	}
 	
 	public String tellCards(String userName){
@@ -230,6 +264,8 @@ public class GameState{
 			else{
 				bestOfferVal += offerVal;
 				auctionWinner = userName;
+				gameTurn = userName;
+				lastInRound = withWho.get(userName);
 				whoseAuctionTurn = withWho.get(userName);
 				for(String key: bestOfferChanged.keySet()) bestOfferChanged.put(key,true);
 				for(String key: turnsChanged.keySet()) turnsChanged.put(key,true);

@@ -97,6 +97,10 @@ public class GameKeeper{
 	public String cardsExchanged(String gameId, String userName) throws Exception{
 		return pairs.get(gameId).cardsExchanged(userName);
 	}
+
+	public String playerMoveChange(String gameId, String userName) throws Exception{
+		return pairs.get(gameId).playerMoveChange(userName);
+	}
 	
 	class Pair{
 		private String gameId;
@@ -122,6 +126,10 @@ public class GameKeeper{
 			historyChanged = lock.newCondition();
 			gameWon = lock.newCondition();
 			players_added++;
+		}
+		
+		public String playerMoveChange(String userName) throws Exception{
+			return gs.playerMoveChange(userName);
 		}
 		
 		public String cardsExchanged(String userName) throws Exception{
