@@ -36,13 +36,13 @@ function onClick(){
 				if(picked.length != 2){
 					console.log("adding " + this.id);
 					picked.push(this.id);
-					this.style.top = parseInt(this.style.top.replace("px","")) + 20;
+					this.style.top = parseInt(this.style.top.replace("px","")) - 30;
 				}
 			}
 			else{ 
 				console.log("deleting " + this.id);
 				picked.splice(picked.indexOf(this.id),1);
-				this.style.top = parseInt(this.style.top.replace("px","")) - 20;
+				this.style.top = parseInt(this.style.top.replace("px","")) + 30;
 			}
 			//$("#container").data("picked_to_exchange",picked);
 			console.log($("#container").data("picked_to_exchange"));
@@ -101,8 +101,16 @@ function spawnHeap(id){
 	}
 }
 
+function whoseGameTurn(request, responseText){	
+	
+}
+
+function enemyMove(request, responseText){
+	
+}
+
 function cards_exchanged(request, responseText){
-	console.log("cards_exchanged");
+	console.log("cards_exchanged " + responseText);
 	var picked = $("#container").data("picked_to_exchange");
 	var new_values = responseText.split("@"); //userName@card1@card2
 	var playerName = request.replace("/","").replace("..","").split(" ")[0];
@@ -113,13 +121,23 @@ function cards_exchanged(request, responseText){
 			var exchange_card = document.getElementById(picked[i]);
 			exchange_card.src = "../images/" + new_values[i+1] + ".png";
 			exchange_card.style.top = container_height - card_height;
-			picked.splice(picked.indexOf(exchange_card.id),1); //remove name of card from picked
 		}
+		for (var i = 0; i<2; i++)
+			picked.splice(picked.indexOf(exchange_card.id),1); //remove name of card from picked
+		$("#exchange_cards_button").remove();
 	}
 	var id = $("#container").data("selectedHeapId") == "leftHeapPicker" ? 0 : 1;
-	for (var i = 0; i < 2; i++){
+	for (var i = 0; i < 2; i++){ //cover heap cards
 		document.getElementById("heap_card_" + id + "_" + i).src = "../images/card_background.jpg";
 	}
+	$("#auctionInfo").remove();
+	
+	var gameInfo = document.createElement("INPUT");
+	gameInfo.id = "gameInfo";
+	gameInfo.readOnly = true;
+	gameInfo.style.left = "25%";
+	gameInfo.style.position = "absolute";
+	gameInfo.style.top = "45%";	
 	$("#container").data("phase","play");
 }
 
@@ -130,10 +148,10 @@ function exchange_cards(){
 	if (picked.length == 2){
 		var descOfChange = "";
 		for (var i = 0; i < 2; i++){
+			console.log(picked[i]);
 			descOfChange += picked[i].split("_")[1] + "@"; //my_i
+			console.log(descOfChange);
 		}
-		$("#container").data("selectedHeapId",this.id);
-		descOfChange += this.id;
 		var exch_req = new XMLHttpRequest();
 		exch_req.open( "CHANGEHEAP", request + " " + descOfChange, false ); // false for synchronous request
 		exch_req.send( null );		
@@ -271,7 +289,12 @@ function spawnAuction(request){
 	var plus10Button = document.createElement("BUTTON");
 	var passButton = document.createElement("BUTTON");
 	var auctionInfo = document.createElement("INPUT");
+	
 	auctionInfo.readOnly = true;
+	auctionInfo.style.left = "25%";
+	auctionInfo.style.position = "absolute";
+	auctionInfo.style.top = "45%";
+	
 	bestOffer.readOnly = true;
 	plus10Button.innerHTML = "+ 10";
 	passButton.innerHTML = "pass";
@@ -282,17 +305,14 @@ function spawnAuction(request){
 	plus10Button.id = "plusTen";
 	passButton.id = "pass";
 	
-	auctionInfo.style.position = "absolute";
 	bestOffer.style.position = "absolute";
 	plus10Button.style.position = "absolute";
 	passButton.style.position = "absolute";
 	
-	auctionInfo.style.left = "25%";
 	bestOffer.style.left = "45%";
 	plus10Button.style.left = "45%";
 	passButton.style.left = "50%";
 	
-	auctionInfo.style.top = "45%";
 	bestOffer.style.top = "45%";
 	plus10Button.style.top = "50%";
 	passButton.style.top = "50%";
@@ -338,19 +358,16 @@ function spawnCards(player_cards,request){
 	}
 	console.log(gap);
 	for (var i = 0; i < amount_of_cards; i++) {
-		var square = document.createElement("div");
-		square.style.top = vertical_pos + "px";
-		square.style.left = i * width + i*gap + 0.5*gap + "px";
-		square.style.position="absolute";
 		var picture = document.createElement("img");
-		//picture.src = "../images/card_background.jpg";
 		picture.src = cards[i];
 		picture.height = height;
 		picture.width = width;
 		picture.id = player_cards ? "my_" + i : "enemy_" + i;
 		picture.onclick = onClick;
-		square.appendChild(picture);
-		container.appendChild(square);
+		picture.style.top = vertical_pos + "px";
+		picture.style.left = i * width + i*gap + 0.5*gap + "px";
+		picture.style.position="absolute";
+		container.appendChild(picture);
 		$("#my_" + i).data("card",cards[i].match(/[/]images[/](\w+_\w+)[\.]/)[1]);
 		$("#my_" + i).data("i",i);
 	}

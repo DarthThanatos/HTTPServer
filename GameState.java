@@ -158,7 +158,7 @@ public class GameState{
 		String[] descParts = descOfChange.split("@");
 		int player_hand_index_one = Integer.parseInt(descParts[0]); 
 		int player_hand_index_two = Integer.parseInt(descParts[1]);
-		int heapIndex = descParts[2].equals("leftHeapPicker") ? 0 : 1;
+		int heapIndex = selectedHeapId.equals("leftHeapPicker") ? 0 : 1;
 		int tmp = playersCards.get(userName)[player_hand_index_one];
 		playersCards.get(userName)[player_hand_index_one] = heaps[heapIndex][0];
 		String heap_card_one = allCards[heaps[heapIndex][0]];
@@ -170,9 +170,9 @@ public class GameState{
 		
 		lock.lock();
 		for(String key : playersCardsExchanged.keySet()) playersCardsExchanged.put(key,true);
+		exchange_info = userName + "@" + heap_card_one + "@"  + heap_card_two;
 		arePlayersCardsExchanged.signalAll();
 		lock.unlock();
-		exchange_info = userName + "@" + heap_card_one + "@"  + heap_card_two;
 		return "ok";
 	}
 	
