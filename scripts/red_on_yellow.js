@@ -146,6 +146,16 @@ function endRound(){
 	document.getElementById("enemyScoreInfo").value = "Enemy score: " + msgParts[3];
 	document.getElementById("gameTurnInfo").value = msgParts[0] + "' turn";
 	$("#container").data("phase", "play");
+	$("#container").data("enemyScore",msgParts[3]);
+	$("#container").data("myScore",msgParts[2]);
+	var rounds = parseInt($("#container").data("rounds"));
+	rounds++;
+	if(rounds == 10){
+		$("#container").data("rounds", 0);
+		clearContainer(request);
+		start($("#container").data("startMsg"),request);
+	}
+	else $("#container").data("rounds", rounds);
 }
 
 function enemyMove(request, responseText){
@@ -160,7 +170,8 @@ function enemyMove(request, responseText){
 	enemyCard.style.top = card_height + 20;
 	enemyCard.src = "../images/" + msgParts[1] + ".png";
 	$("#container").data("enemy_card", enemyCard.id);
-	sendAsynchHTTPQuery(request, enemyMove, "PLAYERMOVECHANGE");
+	if(parseInt($("#container").data("rounds")) != 10)
+		sendAsynchHTTPQuery(request, enemyMove, "PLAYERMOVECHANGE");
 	if($("#container").data("lastInRound") != playerName) {
 		setTimeout(endRound, 3000);
 		$("#container").data("phase", "endRound");
@@ -196,7 +207,7 @@ function cards_exchanged(request, responseText){
 	gameInfo.style.left = "15%";
 	gameInfo.style.position = "absolute";
 	gameInfo.style.top = "45%";	
-	gameInfo.value = "Your score: 0";
+	gameInfo.value = "Your score: " + $("#container").data("myScore");
 	
 	var gameTurnInfo = document.createElement("INPUT");
 	gameTurnInfo.id = "gameTurnInfo";
@@ -212,7 +223,7 @@ function cards_exchanged(request, responseText){
 	enemyScoreInfo.style.left = "35%";
 	enemyScoreInfo.style.position = "absolute";
 	enemyScoreInfo.style.top = "45%";
-	enemyScoreInfo.value = "Enemy score: 0";
+	enemyScoreInfo.value = "Enemy score: " + $("#container").data("enemyScore");
 	
 	var contractInfo = document.createElement("INPUT");
 	contractInfo.id = "contractInfo";
@@ -237,6 +248,7 @@ function cards_exchanged(request, responseText){
 	document.getElementById("container").appendChild(atutInfo);
 	sendAsynchHTTPQuery(request, enemyMove, "PLAYERMOVECHANGE");
 	$("#container").data("phase","play");
+	$("#container").data("rounds",0);
 }
 
 function exchange_cards(){
@@ -425,6 +437,10 @@ function spawnAuction(request){
 	container.appendChild(passButton);
 	container.appendChild(auctionInfo);
 	
+	var resetRq = new XMLHttpRequest();
+	resetRq.open( "RESETAUCTION", request, false ); // false for synchronous request
+	resetRq.send( null );
+	
 	sendAsynchHTTPQuery(request, bestOfferFun, "BESTOFFER");
 	sendAsynchHTTPQuery(request, auctionWon, "AUCTIONWON");
 	sendAsynchHTTPQuery(request, auctionTurn, "AUCTIONTURN");
@@ -495,14 +511,9 @@ function clearContainer(request){
 	}
 	for(var i = 0; i < ids.length; i++)
 		$("#"+ids[i]).remove();
-	$(window).on("beforeunload", function() {
-		var closeRequest = new XMLHttpRequest();
-		closeRequest.open( "CLOSEGAME", request, false ); // false for synchronous request
-		closeRequest.send( null );
-	});
 }
 
-function informAboutWinning(msg){
+function informAboutWinning(request, msg){
 	console.log(msg);
 	$("#header").html(msg + ". To start another game, reload the page.");
 }
@@ -511,17 +522,7 @@ function start(msg,request){
 	xmlHttp = new XMLHttpRequest();
 	xmlHttp.open( "WITHWHO", request, false ); // false for synchronous request
 	xmlHttp.send( null );
-	header.innerHTML = msg + "; playing with " + xmlHttp.responseText;
-	
-	winQuestion = new XMLHttpRequest();
-	winQuestion.onreadystatechange = function() { 
-		if(winQuestion.readyState == 4)
-			informAboutWinning(winQuestion.responseText);
-	}
-	winQuestion.open("DOIWIN",request,true);
-	winQuestion.send( null );
-	
-	spawnChat(request);
+	header.innerHTML = msg + "; playing with " + xmlHttp.responseText;	
 	spawnCards(false,request);
 	spawnCards(true,request);
 	spawnHeap(0);
@@ -550,6 +551,7 @@ function login(){
 		xmlHttp.open( "LOG", request, false ); // false for synchronous request
 		xmlHttp.send( null );
 		var startMsg = "1000: Player: " + username + " at table: " +   gameId + "; game mode: " + gameMode;
+		$("#container").data("startMsg", startMsg);
 		//console.log(xmlHttp.responseText);
 		switch(xmlHttp.responseText){
 			case "Waiting for another player":
@@ -557,8 +559,11 @@ function login(){
 				header.innerHTML = "1000: " + username + " is waiting for another player at table: " + gameId + "; game mode: " + gameMode;
 				xmlHttp = new XMLHttpRequest();
 				xmlHttp.onreadystatechange = function() { 
-					if(xmlHttp.readyState == 4)
+					if(xmlHttp.readyState == 4){
 						start(startMsg,request);
+						spawnChat(request);
+						sendAsynchHTTPQuery(request, informAboutWinning,"DOIWIN");
+					}
 				}
 				xmlHttp.open("CANSTART",request,true);
 				xmlHttp.send( null );
@@ -566,6 +571,8 @@ function login(){
 			case "Starting":
 				clearContainer(request);
 				start(startMsg,request);
+				spawnChat(request);
+				sendAsynchHTTPQuery(request, informAboutWinning,"DOIWIN");
 				break;
 			default:
 				info.value = xmlHttp.responseText;
@@ -573,5 +580,12 @@ function login(){
 		}
 	}
 	info.setAttribute("size", info.value.length);
+	$("#container").data("enemyScore",0);
+	$("#container").data("myScore",0);	
+	$(window).on("beforeunload", function() {
+		var closeRequest = new XMLHttpRequest();
+		closeRequest.open( "CLOSEGAME", request, false ); // false for synchronous request
+		closeRequest.send( null );
+	});
 }
 

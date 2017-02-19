@@ -158,9 +158,26 @@ public class GameState{
 		isAuctionWon = lock.newCondition();
 		bestOfferVal = 100;
 		auctionWinner = playerOne;
+		
 		score = new HashMap<String, Integer>();
 		score.put(playerOne,0);
 		score.put(playerTwo,0);
+	}
+	
+	public String resetAuction(String userName){
+		if(userName.equals(auctionWinner)){
+			String playerOne = playersNames[0];
+			String playerTwo = playersNames[1];
+			bestOfferChanged.put(playerOne, true);
+			bestOfferChanged.put(playerTwo, true);		
+			turnsChanged.put(playerOne,true);
+			turnsChanged.put(playerTwo,true);
+			bestOfferVal = 100;
+			auctionWinner = playerOne;
+			whoseAuctionTurn = playerOne;
+			auctionEnded = false;
+		}
+		return "ok";
 	}
 	
 	public String endRound(String userName){
@@ -179,6 +196,7 @@ public class GameState{
 	private String winningColor;
 	private int recentScore = 0; //round score, reseted at the start of each round
 	private String bestCardUser;
+	private String atutColor = "none";
 	private String initialCard;
 	
 	public String changeMove(String userName, String moveDesc){

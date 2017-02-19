@@ -150,6 +150,12 @@ public class Server1000 extends myHTTPServer{
 		String gameId = httpQueryString.split("%20")[3];	
 		sendResponse(200, gk.endRound(gameId,userName), false);		
 	}	
+
+	public void resetAuction() throws Exception{
+		String userName = httpQueryString.replaceFirst("/", "").split("%20")[0];
+		String gameId = httpQueryString.split("%20")[3];	
+		sendResponse(200, gk.resetAuction(gameId,userName), false);		
+	}	
 	
 	@Override
 	public boolean patternMatching(){
@@ -228,6 +234,10 @@ public class Server1000 extends myHTTPServer{
 			}	
 			else if(httpMethod.equals("ENDROUND")){
 				endRound();
+				return true;
+			}
+			else if(httpMethod.equals("RESETAUCTION")){
+				resetAuction();
 				return true;
 			}
 			return super.patternMatching();

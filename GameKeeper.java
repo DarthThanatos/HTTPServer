@@ -110,6 +110,10 @@ public class GameKeeper{
 		return pairs.get(gameId).playerMoveChange(userName);
 	}
 	
+	public String resetAuction(String gameId, String userName){
+		return pairs.get(gameId).resetAuction(userName);
+	}
+	
 	class Pair{
 		private String gameId;
 		private User[] players;
@@ -262,6 +266,10 @@ public class GameKeeper{
 			fullTable.signalAll();
 			lock.unlock();
 			return false;
+		}
+		
+		public String resetAuction(String userName){
+			return gs.resetAuction(userName);
 		}
 		
 		public String tellCards(String userName){
