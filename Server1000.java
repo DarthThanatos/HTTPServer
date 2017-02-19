@@ -137,6 +137,19 @@ public class Server1000 extends myHTTPServer{
 		String gameId = httpQueryString.split("%20")[3];	
 		sendResponse(200, gk.playerMoveChange(gameId,userName), false);		
 	}	
+
+	public void changeMove() throws Exception{
+		String userName = httpQueryString.replaceFirst("/", "").split("%20")[0];
+		String gameId = httpQueryString.split("%20")[3];	
+		String moveDesc = httpQueryString.split("%20")[4];	
+		sendResponse(200, gk.changeMove(gameId,userName,moveDesc), false);		
+	}	
+
+	public void endRound() throws Exception{
+		String userName = httpQueryString.replaceFirst("/", "").split("%20")[0];
+		String gameId = httpQueryString.split("%20")[3];	
+		sendResponse(200, gk.endRound(gameId,userName), false);		
+	}	
 	
 	@Override
 	public boolean patternMatching(){
@@ -209,6 +222,14 @@ public class Server1000 extends myHTTPServer{
 				playerMoveChange();
 				return true;
 			}	
+			else if(httpMethod.equals("CHANGEMOVE")){
+				changeMove();
+				return true;
+			}	
+			else if(httpMethod.equals("ENDROUND")){
+				endRound();
+				return true;
+			}
 			return super.patternMatching();
 		}catch(Exception e){
 			e.printStackTrace();

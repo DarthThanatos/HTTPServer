@@ -1,3 +1,9 @@
+// contract turn your_score opponent_score atut 
+// renew
+// atut
+// contract
+// winning condition
+
 function change_chat(event, input){
 	input_elem = document.getElementById("chat_input");
 	var chatInput = document.getElementById("chat_input").value;
@@ -49,7 +55,8 @@ function onClick(){
 		}
 		if($("#container").data("phase") == "play"){
 			var playerName = $("#container").data("playerName");
-			var gameTurn = $("#container").data("playerName");
+			var gameTurn = $("#container").data("gameTurn");
+			console.log(gameTurn);
 			if(playerName == gameTurn){
 				var i = $("#" + this.id).data("i");
 				var request = $("#container").data("request");
@@ -57,10 +64,16 @@ function onClick(){
 				moveChangeRq.open("CHANGEMOVE", request + " " + i, false);
 				moveChangeRq.send(null);
 				var container_height = parseInt($("#container").css("height").replace("px",""));
-				var card_height = parseInt(this.style.height.replace("px",""));
-				this.style.top = container_height - 2*this.style.height - 20;
+				var card_height = parseInt($(".animate").css("height").replace("px",""));
+				this.style.top = container_height - 2*card_height - 20;
 				this.style.left = "45%";
 				$("#container").data("gameTurn","opponent");
+				$("#container").data("my_card", this.id);
+				if($("#container").data("lastInRound") == playerName ) {
+					setTimeout(endRound, 3000);
+					$("#container").data("phase", "endRound");
+				}
+				document.getElementById("gameTurnInfo").value = "opponent's turn";
 			}
 		}
 	}
@@ -118,15 +131,40 @@ function spawnHeap(id){
 }
 
 function endRound(){
-	
+	console.log("endRound");
+	$("#" + $("#container").data("my_card")).remove();
+	$("#" + $("#container").data("enemy_card")).remove();
+	var request = $("#container").data("request");
+	var endRoundRq = new XMLHttpRequest();
+	endRoundRq.open("ENDROUND", request, false);
+	endRoundRq.send(null);
+	var msgParts = endRoundRq.responseText.split("@"); //whose_turn@last_In_round@myscore@enemy_score
+	$("#container").data("gameTurn", msgParts[0]);
+	$("#container").data("lastInRound", msgParts[1]);
+	$("#container").data("score", msgParts[2]);
+	document.getElementById("gameInfo").value = "Your score: " + msgParts[2];
+	document.getElementById("enemyScoreInfo").value = "Enemy score: " + msgParts[3];
+	document.getElementById("gameTurnInfo").value = msgParts[0] + "' turn";
+	$("#container").data("phase", "play");
 }
 
 function enemyMove(request, responseText){
 	var msgParts = responseText.split("@");
-	console.log(msgParts);
 	var playerName = $("#container").data("playerName");
 	$("#container").data("gameTurn", playerName);
-	//sendAsynchHTTPQuery(request, enemyMove, "PLAYERMOVECHANGE");
+	document.getElementById("gameTurnInfo").value = "Your move";
+	var enemyCard = document.getElementById("enemy_" + msgParts[0]);
+	console.log("enemy_" + msgParts[0] + msgParts);
+	var card_height = parseInt($(".animate").css("height").replace("px", ""));
+	enemyCard.style.left = "45%";
+	enemyCard.style.top = card_height + 20;
+	enemyCard.src = "../images/" + msgParts[1] + ".png";
+	$("#container").data("enemy_card", enemyCard.id);
+	sendAsynchHTTPQuery(request, enemyMove, "PLAYERMOVECHANGE");
+	if($("#container").data("lastInRound") != playerName) {
+		setTimeout(endRound, 3000);
+		$("#container").data("phase", "endRound");
+	}
 }
 
 function cards_exchanged(request, responseText){
@@ -155,10 +193,48 @@ function cards_exchanged(request, responseText){
 	var gameInfo = document.createElement("INPUT");
 	gameInfo.id = "gameInfo";
 	gameInfo.readOnly = true;
-	gameInfo.style.left = "25%";
+	gameInfo.style.left = "15%";
 	gameInfo.style.position = "absolute";
 	gameInfo.style.top = "45%";	
+	gameInfo.value = "Your score: 0";
+	
+	var gameTurnInfo = document.createElement("INPUT");
+	gameTurnInfo.id = "gameTurnInfo";
+	gameTurnInfo.readOnly = true;
+	gameTurnInfo.style.left = "25%";
+	gameTurnInfo.style.position = "absolute";
+	gameTurnInfo.style.top = "45%";	
+	gameTurnInfo.value = $("#container").data("gameTurn") + "'s turn";
+
+	var enemyScoreInfo = document.createElement("INPUT");
+	enemyScoreInfo.id = "enemyScoreInfo";
+	enemyScoreInfo.readOnly = true;
+	enemyScoreInfo.style.left = "35%";
+	enemyScoreInfo.style.position = "absolute";
+	enemyScoreInfo.style.top = "45%";
+	enemyScoreInfo.value = "Enemy score: 0";
+	
+	var contractInfo = document.createElement("INPUT");
+	contractInfo.id = "contractInfo";
+	contractInfo.readOnly = true;
+	contractInfo.style.left = "45%";
+	contractInfo.style.position = "absolute";
+	contractInfo.style.top = "45%";
+	contractInfo.value = "contract: " + $("#container").data("contract");
+	
+	var atutInfo = document.createElement("INPUT");
+	atutInfo.id = "atutInfo";
+	atutInfo.readOnly = true;
+	atutInfo.style.left = "55%";
+	atutInfo.style.position = "absolute";
+	atutInfo.style.top = "45%";
+	atutInfo.value = "atut color: none";
+	
 	document.getElementById("container").appendChild(gameInfo);
+	document.getElementById("container").appendChild(gameTurnInfo);
+	document.getElementById("container").appendChild(enemyScoreInfo);
+	document.getElementById("container").appendChild(contractInfo);
+	document.getElementById("container").appendChild(atutInfo);
 	sendAsynchHTTPQuery(request, enemyMove, "PLAYERMOVECHANGE");
 	$("#container").data("phase","play");
 }
@@ -283,6 +359,7 @@ function auctionWon(request, responseText){
 		$("#container").data("lastInRound",playerName);
 		auctionInfo.value = msgParts[0] + " has won the auction with score " + msgParts[1];
 	}
+	$("#container").data("contract",msgParts[1]);
 	sendAsynchHTTPQuery(request,showHeap,"HEAPSELECTED");
 	auctionInfo.setAttribute("size", auctionInfo.value.length);
 }

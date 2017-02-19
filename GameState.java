@@ -47,7 +47,6 @@ public class GameState{
 		}
 	}
 
-
 	private void mapFiguresToValues(){
 		cardValues = new HashMap<String, Integer>();
 		for(int i = 0; i < figures.length; i++){
@@ -61,8 +60,7 @@ public class GameState{
 		isBestOfferChanged.signalAll();
 		isAuctionWon.signalAll();
 		myAuctionTurn.signalAll();
-		lock.unlock();
-		
+		lock.unlock();		
 	}
 	
 	public String heapSelected(String userName) throws Exception{
@@ -149,6 +147,7 @@ public class GameState{
 		playersMoveChanged = new HashMap<String,Boolean>();
 		playersMoveChanged.put(playerOne, false);
 		playersMoveChanged.put(playerTwo, false);
+		playerMove = new HashMap<String,String>();
 		isplayerMoveChanged = lock.newCondition();
 				
 		withWho = new HashMap<String,String>();
@@ -159,21 +158,54 @@ public class GameState{
 		isAuctionWon = lock.newCondition();
 		bestOfferVal = 100;
 		auctionWinner = playerOne;
+		score = new HashMap<String, Integer>();
+		score.put(playerOne,0);
+		score.put(playerTwo,0);
+	}
+	
+	public String endRound(String userName){
+		return bestCardUser + "@" + withWho.get(bestCardUser) + "@" + Integer.toString(score.get(userName)) + "@" + Integer.toString(score.get(withWho.get(userName)));
 	}
 	
 	public String playerMoveChange(String userName) throws Exception{
 		lock.lock();
 		while(shouldContinue && !playersMoveChanged.get(userName)) isplayerMoveChanged.await();
+		playersMoveChanged.put(userName, false);
 		lock.unlock();
 		return playerMove.get(userName);
-	}
+	} 
+	
+	private int movesCounter = 0; //counter to check if both players picked cards to "lewa"
+	private String winningColor;
+	private int recentScore = 0; //round score, reseted at the start of each round
+	private String bestCardUser;
+	private String initialCard;
 	
 	public String changeMove(String userName, String moveDesc){
 		lock.lock();
 		int opponentCardIndex = playersCards.get(userName)[Integer.parseInt(moveDesc)];
-		moveDesc += "@" + allCards[opponentCardIndex] + "@" + lastInRound;
+		moveDesc += "@" + allCards[opponentCardIndex];
 		playersMoveChanged.put(withWho.get(userName), true); 
 		playerMove.put(withWho.get(userName), moveDesc);
+		String card = allCards[opponentCardIndex]; 
+		if(movesCounter == 0){
+			recentScore = cardValues.get(allCards[opponentCardIndex].split("_")[0]);
+			initialCard = card;
+			movesCounter = 1;
+			winningColor = card.split("_")[1];
+			bestCardUser = userName;
+		}
+		else{
+			recentScore += cardValues.get(allCards[opponentCardIndex].split("_")[0]);
+			movesCounter = 0;
+			if(card.split("_")[1].equals(winningColor)){
+				if(cardValues.get(card.split("_")[0]) > cardValues.get(initialCard.split("_")[0])){
+					bestCardUser = userName;
+				}
+			}
+			int bestPlayerScore = score.get(bestCardUser);
+			score.put(bestCardUser, recentScore + bestPlayerScore);
+		}
 		isplayerMoveChanged.signalAll();
 		lock.unlock();
 		return "ok";

@@ -27,6 +27,14 @@ public class GameKeeper{
 		}
 	}
 
+	public String endRound(String gameId, String userName){
+		return pairs.get(gameId).endRound(userName);
+	}
+	
+	public String changeMove(String gameId, String userName, String moveDesc){
+		return pairs.get(gameId).changeMove(userName,moveDesc);
+	}
+	
 	public String getOpponentName(String gameId, String userName){
 		return pairs.get(gameId).getOpponentName(userName);
 	}
@@ -126,6 +134,14 @@ public class GameKeeper{
 			historyChanged = lock.newCondition();
 			gameWon = lock.newCondition();
 			players_added++;
+		}
+		
+		public String endRound(String userName){
+			return gs.endRound(userName);
+		}
+		
+		public String changeMove(String userName, String moveDesc){
+			return gs.changeMove(userName,moveDesc);
 		}
 		
 		public String playerMoveChange(String userName) throws Exception{
