@@ -219,7 +219,9 @@ public class GameState{
 			if(card.split("_")[1].equals(winningColor)){
 				if(cardValues.get(card.split("_")[0]) > cardValues.get(initialCard.split("_")[0])){
 					bestCardUser = userName;
+					System.out.println(card + " is bigger than " + initialCard);
 				}
+				else System.out.println(initialCard + " is bigger than " + card);
 			}
 			int bestPlayerScore = score.get(bestCardUser);
 			score.put(bestCardUser, recentScore + bestPlayerScore);
@@ -341,22 +343,25 @@ public class GameState{
 	}
 
 
-	public void shufflePlayersCards(){
-		ArrayList<Integer> cards = new ArrayList<Integer>();
-		int j = 0;
-		for(Integer [] player_cards : playersCards.values()){
-			for (int i = 0; i < player_cards.length; i++)
-				cards.add(j+i, player_cards[i]);
-			j+=10;
+	public String shuffleCards(String userName){
+		if(userName.equals(playersNames[0])){
+			ArrayList<Integer> cards = new ArrayList<Integer>();
+			int j = 0;
+			for(Integer [] player_cards : playersCards.values()){
+				for (int i = 0; i < player_cards.length; i++)
+					cards.add(j+i, player_cards[i]);
+				j+=10;
+			}
+			Collections.shuffle(cards);
+			Integer[] playerOneCards = new Integer[10];
+			Integer[] playerTwoCards = new Integer[10];
+			for(int i = 0; i<10; i++) {
+				playerOneCards[i] = cards.get(i);
+				playerTwoCards[i] = cards.get(i + 10);
+			}
+			playersCards.put(playersNames[0], playerOneCards);
+			playersCards.put(playersNames[1], playerTwoCards);
 		}
-		Collections.shuffle(cards);
-		Integer[] playerOneCards = new Integer[10];
-		Integer[] playerTwoCards = new Integer[10];
-		for(int i = 0; i<10; i++) {
-			playerOneCards[i] = cards.get(i);
-			playerTwoCards[i] = cards.get(i + 10);
-		}
-		playersCards.put(playersNames[0], playerOneCards);
-		playersCards.put(playersNames[1], playerTwoCards);
+		return "ok";
 	}
 }

@@ -58,6 +58,10 @@ public class GameKeeper{
 		return pairs.get(gameId).getHistory(userName);
 	}
 	
+	public String shuffleCards(String gameId, String userName){
+		return pairs.get(gameId).shuffleCards(userName);
+	}
+	
 	public void closeGame(String gameId, String userName){
 		Pair pair = pairs.get(gameId);
 		mutex.lock();
@@ -146,6 +150,10 @@ public class GameKeeper{
 		
 		public String changeMove(String userName, String moveDesc){
 			return gs.changeMove(userName,moveDesc);
+		}
+		
+		public String shuffleCards(String userName){
+			return gs.shuffleCards(userName);
 		}
 		
 		public String playerMoveChange(String userName) throws Exception{

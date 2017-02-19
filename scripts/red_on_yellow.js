@@ -152,6 +152,11 @@ function endRound(){
 	rounds++;
 	if(rounds == 10){
 		$("#container").data("rounds", 0);
+		
+		var shuffleRq = new XMLHttpRequest();
+		shuffleRq.open( "SHUFFLECARDS", request, false ); // false for synchronous request
+		shuffleRq.send( null );
+		
 		clearContainer(request);
 		start($("#container").data("startMsg"),request);
 	}
