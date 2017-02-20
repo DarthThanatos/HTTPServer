@@ -65,7 +65,9 @@ public class Server1000 extends myHTTPServer{
 	public void closeGame() throws Exception{
 		String userName = httpQueryString.replaceFirst("/", "").split("%20")[0];
 		String gameId = httpQueryString.split("%20")[3];
-		gk.closeGame(gameId,userName);
+		String forUser = httpQueryString.split("%20")[4].split("@")[0].replace("_", " ");
+		String forEnemy = httpQueryString.split("%20")[4].split("@")[1].replace("_", " ");
+		gk.closeGame(gameId,userName, forUser, forEnemy);
 		sendResponse(200,"Ok",false);
 	}
 
@@ -147,8 +149,9 @@ public class Server1000 extends myHTTPServer{
 
 	public void endRound() throws Exception{
 		String userName = httpQueryString.replaceFirst("/", "").split("%20")[0];
-		String gameId = httpQueryString.split("%20")[3];	
-		sendResponse(200, gk.endRound(gameId,userName), false);		
+		String gameId = httpQueryString.split("%20")[3];
+		String lastRound = httpQueryString.split("%20")[4];
+		sendResponse(200, gk.endRound(gameId,userName, lastRound), false);		
 	}	
 
 	public void resetAuction() throws Exception{
@@ -163,6 +166,12 @@ public class Server1000 extends myHTTPServer{
 		sendResponse(200, gk.shuffleCards(gameId,userName), false);		
 	}
 	
+	public void gameStats() throws Exception{
+		String userName = httpQueryString.replaceFirst("/", "").split("%20")[0];
+		String gameId = httpQueryString.split("%20")[3];	
+		sendResponse(200, gk.gameStats(gameId,userName), false);		
+	}
+
 	@Override
 	public boolean patternMatching(){
 		try{
@@ -248,6 +257,10 @@ public class Server1000 extends myHTTPServer{
 			}
 			else if(httpMethod.equals("SHUFFLECARDS")){
 				shuffleCards();
+				return true;
+			}
+			else if(httpMethod.equals("GAMESTATS")){
+				gameStats();
 				return true;
 			}
 			return super.patternMatching();

@@ -120,6 +120,7 @@ public class GameState{
 	}
 
 	private void checkForAtuts(String userName){
+		atutColor = "none";
 		Integer[] card_indices = playersCards.get(userName);
 		Integer[] cardPairCollector = new Integer[4]; for (int i = 0; i < 4; i++) cardPairCollector[i] = -1;
 		for (int i : card_indices){
@@ -131,14 +132,17 @@ public class GameState{
 				cardPairCollector[colorIndex] ++;
 			}
 		}
+		System.out.print("Atuts of " + userName + ": ");
 		for(int i = 0; i < 4; i ++){
-			if(cardPairCollector[i] == 2) {
+			if(cardPairCollector[i] == 1) {
 				playersAtuts.get(userName)[i] = true;
+				System.out.print(colors[i] + ", ");
 			}
 			else{ 
 				playersAtuts.get(userName)[i] = false;
 			}
 		}
+		System.out.println();
 	}
 	
 	public GameState(String playerOne, String playerTwo){
@@ -201,8 +205,12 @@ public class GameState{
 		pointsIn10Rounds.put(playerTwo,0);
 	}
 	
+	private Boolean auctionReset = false;
+	
 	public String resetAuction(String userName){
-		if(userName.equals(auctionWinner)){
+		lock.lock();
+		if(!auctionReset){
+			auctionReset = true;
 			String playerOne = playersNames[0];
 			String playerTwo = playersNames[1];
 			bestOfferChanged.put(playerOne, true);
@@ -214,29 +222,40 @@ public class GameState{
 			whoseAuctionTurn = withWho.get(playerOne);
 			auctionEnded = false;
 		}
+		else auctionReset = false;
+		lock.unlock();
 		return "ok";
 	}
 	
-	private int rounds = 0;
 	private HashMap<String, Integer> pointsIn10Rounds;
 	
-	public String endRound(String userName){
-		if(rounds == 9){
-			rounds = 0;
+	public String endRound(String userName, String lastRound){
+		lock.lock();
+		if(lastRound.equals("t")){
 			if(auctionWinner.equals(userName)){
 				if (bestOfferVal < pointsIn10Rounds.get(userName)){
 					int val = score.get(userName);
-					 score.put(userName, val - bestOfferVal);
+					 score.put(userName, val + bestOfferVal);
 				}
 				else{
 					int val = score.get(userName);
-					 score.put(userName, val + bestOfferVal);
+					 score.put(userName, val - bestOfferVal);
 				}
 			}
+			else{ 
+				int val = score.get(userName);
+				score.put(userName, val + pointsIn10Rounds.get(userName));
+			}
 			pointsIn10Rounds.put(userName,0);
-		}else rounds ++;
+		}
+		lock.unlock();
 		return bestCardUser + "@" + withWho.get(bestCardUser) + "@" + Integer.toString(pointsIn10Rounds.get(userName)) + "@" + Integer.toString(pointsIn10Rounds.get(withWho.get(userName))) + "@" + 
 		score.get(userName) + "@" + score.get(withWho.get(userName)) +  "@" + atutColor;
+	}
+	
+	public String gameStats(String userName){
+		return bestCardUser + "@" + withWho.get(bestCardUser) + "@" + Integer.toString(pointsIn10Rounds.get(userName)) + "@" + Integer.toString(pointsIn10Rounds.get(withWho.get(userName))) + "@" + 
+		score.get(userName) + "@" + score.get(withWho.get(userName)) +  "@" + atutColor;		
 	}
 	
 	public String playerMoveChange(String userName) throws Exception{
@@ -270,12 +289,16 @@ public class GameState{
 			String figure = card.split("_")[0];
 			String color = card.split("_")[1];
 			if(figure.equals("king") || figure.equals("dama")){
-				if (!playerAtutsPresented.get(userName).contains(color)){
-					atutColor = color;
-					HashMap<String, Integer> atutValue = new HashMap<String,Integer>();
-					atutValue.put("pik",40); atutValue.put("trefl",60); atutValue.put("karo",80); atutValue.put("kier",100);
-					recentScore += atutValue.get(color);
-					playerAtutsPresented.get(userName).add(color);
+				int colorIndex = java.util.Arrays.asList(colors).indexOf(color);
+				if(playersAtuts.get(userName)[colorIndex]){
+					if (!playerAtutsPresented.get(userName).contains(color)){
+						atutColor = color;
+						HashMap<String, Integer> atutValue = new HashMap<String,Integer>();
+						atutValue.put("pik",40); atutValue.put("trefl",60); atutValue.put("karo",80); atutValue.put("kier",100);
+						int val = pointsIn10Rounds.get(userName);
+						pointsIn10Rounds.put(userName, val + atutValue.get(color));
+						playerAtutsPresented.get(userName).add(color);
+					}
 				}
 			}
 		}
@@ -327,7 +350,9 @@ public class GameState{
 		lock.lock();
 		for(String key : playersCardsExchanged.keySet()) playersCardsExchanged.put(key,true);
 		exchange_info = userName + "@" + heap_card_one + "@"  + heap_card_two;
-		arePlayersCardsExchanged.signalAll();
+		checkForAtuts(userName);
+		checkForAtuts(withWho.get(userName));
+		arePlayersCardsExchanged.signalAll();		
 		lock.unlock();
 		return "ok";
 	}
@@ -411,9 +436,12 @@ public class GameState{
 		return auctionWinner + " " + Integer.toString(bestOfferVal);
 	}
 
-
+	private Boolean shuffledChanged = false;
+	
 	public String shuffleCards(String userName){
-		if(userName.equals(playersNames[0])){
+		lock.lock();
+		if(!shuffledChanged) {
+			shuffledChanged =  true;
 			ArrayList<Integer> cards = new ArrayList<Integer>();
 			int j = 0;
 			for(Integer [] player_cards : playersCards.values()){
@@ -430,9 +458,9 @@ public class GameState{
 			}
 			playersCards.put(playersNames[0], playerOneCards);
 			playersCards.put(playersNames[1], playerTwoCards);
-			checkForAtuts(userName);
-			checkForAtuts(withWho.get(userName));
 		}
+		else shuffledChanged = false;		
+		lock.unlock();
 		return "ok";
 	}
 }

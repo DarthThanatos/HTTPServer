@@ -1,4 +1,4 @@
-// winning condition
+// winning condition; score
 
 function change_chat(event, input){
 	input_elem = document.getElementById("chat_input");
@@ -51,6 +51,7 @@ function onClick(){
 		}
 		if($("#container").data("phase") == "play"){
 			var playerName = $("#container").data("playerName");
+			var withWho = $("#container").data("withWho");			
 			var gameTurn = $("#container").data("gameTurn");
 			console.log(gameTurn);
 			if(playerName == gameTurn){
@@ -63,13 +64,14 @@ function onClick(){
 				var card_height = parseInt($(".animate").css("height").replace("px",""));
 				this.style.top = container_height - 2*card_height - 20;
 				this.style.left = "45%";
-				$("#container").data("gameTurn","opponent");
+				gameTurn = gameTurn == playerName ? withWho: playerName;
+				$("#container").data("gameTurn",gameTurn);
 				$("#container").data("my_card", this.id);
 				if($("#container").data("lastInRound") == playerName ) {
 					setTimeout(endRound, 3000);
 					$("#container").data("phase", "endRound");
 				}
-				document.getElementById("gameTurnInfo").value = "opponent's turn";
+				document.getElementById("gameTurnInfo").value = gameTurn + "'s turn";
 			}
 		}
 	}
@@ -132,21 +134,25 @@ function endRound(){
 	$("#" + $("#container").data("enemy_card")).remove();
 	var request = $("#container").data("request");
 	var endRoundRq = new XMLHttpRequest();
-	endRoundRq.open("ENDROUND", request, false);
+	var rounds = parseInt($("#container").data("rounds"));
+	rounds++;
+	var lastRound = rounds == 10 ? "t" : "f";
+	endRoundRq.open("ENDROUND", request + " " + lastRound, false);
 	endRoundRq.send(null);
 	var msgParts = endRoundRq.responseText.split("@"); //whose_turn@last_In_round@myscore@enemy_score@youroverallScore@opponentOverallScore@atutColor
 	$("#container").data("gameTurn", msgParts[0]);
 	$("#container").data("lastInRound", msgParts[1]);
 	$("#container").data("score", msgParts[2]);
+	$("#container").data("overAllScoreVal", "Your score: " + msgParts[4] + "; Opponent's score: " + msgParts[5]);
+	$("#container").data("atutInfoVal", msgParts[6]);	
 	document.getElementById("gameInfo").value = "Your score: " + msgParts[2];
+	document.getElementById("gameTurnInfo").value = msgParts[0] + "'s turn";
 	document.getElementById("enemyScoreInfo").value = "Enemy score: " + msgParts[3];
 	document.getElementById("overAllScore").value = "Your score: " + msgParts[4] + "; Opponent's score: " + msgParts[5];
 	document.getElementById("atutInfo").value = "atut color: " + msgParts[6];
 	$("#container").data("phase", "play");
 	$("#container").data("enemyScore",msgParts[3]);
 	$("#container").data("myScore",msgParts[2]);
-	var rounds = parseInt($("#container").data("rounds"));
-	rounds++;
 	if(rounds == 10){
 		$("#container").data("rounds", 0);
 		
@@ -163,8 +169,11 @@ function endRound(){
 function enemyMove(request, responseText){
 	var msgParts = responseText.split("@");
 	var playerName = $("#container").data("playerName");
-	$("#container").data("gameTurn", playerName);
-	document.getElementById("gameTurnInfo").value = "Your move";
+	var gameTurn = $("#container").data("gameTurn");
+	var withWho = $("#container").data("withWho");
+	gameTurn = gameTurn == playerName ? withWho : playerName;
+	$("#container").data("gameTurn", gameTurn);
+	document.getElementById("gameTurnInfo").value = gameTurn + "'s turn";
 	var enemyCard = document.getElementById("enemy_" + msgParts[0]);
 	console.log("enemy_" + msgParts[0] + msgParts);
 	var card_height = parseInt($(".animate").css("height").replace("px", ""));
@@ -241,7 +250,7 @@ function cards_exchanged(request, responseText){
 	atutInfo.style.left = "75%";
 	atutInfo.style.position = "absolute";
 	atutInfo.style.top = "50%";
-	atutInfo.value = "atut color: none";
+	atutInfo.value = "atut color: " + $("#container").data("atutInfoVal");
 	
 	var overAllScore = document.createElement("INPUT");
 	overAllScore.id = "overAllScore";
@@ -249,7 +258,7 @@ function cards_exchanged(request, responseText){
 	overAllScore.style.left = "15%";
 	overAllScore.style.position = "absolute";
 	overAllScore.style.top = "50%";
-	overAllScore.value = "Your overall score: 0; Opponent's overall score: 0";
+	overAllScore.value = $("#container").data("overAllScoreVal");
 	overAllScore.setAttribute("size", overAllScore.value.length);
 	
 	document.getElementById("container").appendChild(gameInfo);
@@ -384,6 +393,7 @@ function auctionWon(request, responseText){
 		auctionInfo.value = msgParts[0] + " has won the auction with score " + msgParts[1];
 	}
 	$("#container").data("contract",msgParts[1]);
+	
 	sendAsynchHTTPQuery(request,showHeap,"HEAPSELECTED");
 	auctionInfo.setAttribute("size", auctionInfo.value.length);
 }
@@ -534,13 +544,45 @@ function start(msg,request){
 	xmlHttp = new XMLHttpRequest();
 	xmlHttp.open( "WITHWHO", request, false ); // false for synchronous request
 	xmlHttp.send( null );
-	header.innerHTML = msg + "; playing with " + xmlHttp.responseText;	
-	spawnCards(false,request);
-	spawnCards(true,request);
-	spawnHeap(0);
-	spawnHeap(1);
-	spawnAuction(request);
-	spawnHeapButtons();
+	header.innerHTML = msg + "; playing with " + xmlHttp.responseText;
+	$("#container").data("withWho", xmlHttp.responseText);
+	$("#container").data("phase", "start");
+	
+	statQuestion = new XMLHttpRequest();
+	statQuestion.open("GAMESTATS",request,false);
+	statQuestion.send( null );	
+	var msgParts = statQuestion.responseText.split("@");
+	$("#container").data("enemyScore",msgParts[3]);
+	$("#container").data("myScore",msgParts[2]);
+	$("#container").data("gameTurn", msgParts[0]);
+	$("#container").data("lastInRound", msgParts[1]);
+	$("#container").data("overAllScoreVal", "Your score: " + msgParts[4] + "; Opponent's score: " + msgParts[5]);
+	$("#container").data("atutInfoVal", msgParts[6]);
+	var my_score = parseInt(msgParts[2]);
+	var enemy_score = parseInt(msgParts[3]);
+	if(my_score >= 1000 || enemy_score >= 1000){
+		var forEnemy = "";
+		var forUser = "";
+		if(my_score > enemy_score){
+			forEnemy = "You lost with score " + enemy_score + " against " + my_score;
+			forUser = "You won with score " + my_score + " against " + enemy_score;
+		}
+		else{
+			forEnemy = "You won with score " + my_score + " against " + enemy_score;
+			forUser = "You lost with score " + enemy_score + " against " + my_score;
+		}
+		var closeRequest = new XMLHttpRequest();
+		closeRequest.open( "CLOSEGAME", request + " " + forUser.replace(/ /g,"_") + "@" + forEnemy.replace(/ /g, "_"), false ); // false for synchronous request
+		closeRequest.send( null );
+	}
+	else{
+		spawnCards(false,request);
+		spawnCards(true,request);
+		spawnHeap(0);
+		spawnHeap(1);
+		spawnAuction(request);
+		spawnHeapButtons();
+	}
 }
 
 function login(){
@@ -594,9 +636,13 @@ function login(){
 	info.setAttribute("size", info.value.length);
 	$("#container").data("enemyScore",0);
 	$("#container").data("myScore",0);	
+	$("#container").data("overAllScoreVal", "Your overall score: 0; Opponent's overall score: 0");
+	$("#container").data("atutInfoVal","none");
 	$(window).on("beforeunload", function() {
 		var closeRequest = new XMLHttpRequest();
-		closeRequest.open( "CLOSEGAME", request, false ); // false for synchronous request
+		var forEnemy = "You won, because " + username + " has left the table";
+		var forUser = "You lost, because you have left the table";
+		closeRequest.open( "CLOSEGAME", request + " " + forUser.replace(/ /g,"_") + "@" + forEnemy.replace(/ /g, "_"), false ); // false for synchronous request
 		closeRequest.send( null );
 	});
 }

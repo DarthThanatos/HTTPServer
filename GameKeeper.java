@@ -27,8 +27,12 @@ public class GameKeeper{
 		}
 	}
 
-	public String endRound(String gameId, String userName){
-		return pairs.get(gameId).endRound(userName);
+	public String endRound(String gameId, String userName, String lastRound){
+		return pairs.get(gameId).endRound(userName, lastRound);
+	}
+	
+	public String gameStats(String gameId, String userName){
+		return pairs.get(gameId).gameStats(userName);
 	}
 	
 	public String changeMove(String gameId, String userName, String moveDesc){
@@ -62,10 +66,10 @@ public class GameKeeper{
 		return pairs.get(gameId).shuffleCards(userName);
 	}
 	
-	public void closeGame(String gameId, String userName){
+	public void closeGame(String gameId, String userName, String forUser, String forEnemy){
 		Pair pair = pairs.get(gameId);
 		mutex.lock();
-		boolean deleteTable = pair.closeGame(userName);
+		boolean deleteTable = pair.closeGame(userName, forUser, forEnemy);
 		if (deleteTable) pairs.remove(gameId);
 		mutex.unlock();
 	}
@@ -129,6 +133,7 @@ public class GameKeeper{
 		private final Lock lock; 
 		private final Condition fullTable, historyChanged, gameWon; 
 		private GameState gs = null;
+		private boolean shouldContinue = true;
 
 		public Pair(String gameId, User player){
 			players = new User[2];
@@ -144,8 +149,8 @@ public class GameKeeper{
 			players_added++;
 		}
 		
-		public String endRound(String userName){
-			return gs.endRound(userName);
+		public String endRound(String userName, String lastRound){
+			return gs.endRound(userName, lastRound);
 		}
 		
 		public String changeMove(String userName, String moveDesc){
@@ -158,6 +163,10 @@ public class GameKeeper{
 		
 		public String playerMoveChange(String userName) throws Exception{
 			return gs.playerMoveChange(userName);
+		}
+		
+		public String gameStats(String userName){
+			return gs.gameStats(userName);
 		}
 		
 		public String cardsExchanged(String userName) throws Exception{
@@ -194,9 +203,8 @@ public class GameKeeper{
 		
 		public String doIWin(String userName) throws Exception{
 			lock.lock();
-			while(winMsg.get(userName).equals("No")) {
+			while(shouldContinue && winMsg.get(userName).equals("No")) {
 				String res = winMsg.get(userName);
-				//System.out.println("\n\n" + res + "\n\n");
 				gameWon.await();
 			}
 			String res = winMsg.get(userName);
@@ -204,11 +212,10 @@ public class GameKeeper{
 			return res;
 		}
 		
-		public boolean closeGame(String userName){
-			//System.out.println("IN CLOSE GAME\n\n\n");
+		public boolean closeGame(String userName, String forUser, String forEnemy){
 			lock.lock();
 			if (players_added==1) {
-				//System.out.println("\n\n\none player\n\n\n");
+				shouldContinue = false;
 				gameWon.signalAll();
 				fullTable.signalAll();
 				historyChanged.signalAll();
@@ -216,11 +223,11 @@ public class GameKeeper{
 				lock.unlock();
 				return true;
 			}
-			//System.out.println("\n\n\ntwo players\n\n\n");
 			String opponent = withWho.get(userName);
-			winMsg.put(opponent,"You won, because " + userName + " has left the table");
-			winMsg.put(userName,"You lost, because you have left the table");
+			if(winMsg.get(opponent).equals("No")) winMsg.put(opponent, forEnemy);
+			if(winMsg.get(userName).equals("No")) winMsg.put(userName, forUser);
 			players_added--;
+			shouldContinue = false;
 			gameWon.signalAll();
 			fullTable.signalAll();
 			historyChanged.signalAll();
@@ -232,7 +239,7 @@ public class GameKeeper{
 		public void waitForFullTable(){
 			lock.lock();
 			try{
-				while(players_added!=2) fullTable.await();
+				while(shouldContinue && players_added!=2) fullTable.await();
 			}catch(Exception e){
 				e.printStackTrace();
 			}
@@ -252,7 +259,7 @@ public class GameKeeper{
 		
 		public String getHistory(String userName) throws Exception{
 			lock.lock();
-			while (!msgModified.get(userName)) historyChanged.await();
+			while (shouldContinue && !msgModified.get(userName)) historyChanged.await();
 			msgModified.put(userName,false);
 			lock.unlock();
 			return msgHistory;
