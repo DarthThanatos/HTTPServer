@@ -34,6 +34,8 @@ public class GameState{
 	private HashMap<String,String> withWho;
 	private String gameTurn;
 	private HashMap<String, String> playerMove;
+	private HashMap <String,Boolean[]> playersAtuts;
+	private HashMap<String, ArrayList<String>> playerAtutsPresented;
 	private String lastInRound;
 	
 	private void createPack(){
@@ -57,6 +59,9 @@ public class GameState{
 	public void closeThreads(){
 		lock.lock();
 		shouldContinue = false;
+		isHeapSelected.signalAll();
+		arePlayersCardsExchanged.signalAll();
+		isplayerMoveChanged.signalAll();
 		isBestOfferChanged.signalAll();
 		isAuctionWon.signalAll();
 		myAuctionTurn.signalAll();
@@ -113,6 +118,28 @@ public class GameState{
 		playersCards.put(playerOne,playerOneCards);
 		playersCards.put(playerTwo, playerTwoCards);
 	}
+
+	private void checkForAtuts(String userName){
+		Integer[] card_indices = playersCards.get(userName);
+		Integer[] cardPairCollector = new Integer[4]; for (int i = 0; i < 4; i++) cardPairCollector[i] = -1;
+		for (int i : card_indices){
+			String card = allCards[i];
+			String figure = card.split("_")[0];
+			String color = card.split("_")[1];
+			if(figure.equals("king") || figure.equals("dama")){
+				int colorIndex = java.util.Arrays.asList(colors).indexOf(color);
+				cardPairCollector[colorIndex] ++;
+			}
+		}
+		for(int i = 0; i < 4; i ++){
+			if(cardPairCollector[i] == 2) {
+				playersAtuts.get(userName)[i] = true;
+			}
+			else{ 
+				playersAtuts.get(userName)[i] = false;
+			}
+		}
+	}
 	
 	public GameState(String playerOne, String playerTwo){
 		createPack();
@@ -154,7 +181,7 @@ public class GameState{
 		withWho.put(playerOne,playerTwo);
 		withWho.put(playerTwo,playerOne);
 		
-		whoseAuctionTurn = playerOne;
+		whoseAuctionTurn = playerTwo;
 		isAuctionWon = lock.newCondition();
 		bestOfferVal = 100;
 		auctionWinner = playerOne;
@@ -162,6 +189,16 @@ public class GameState{
 		score = new HashMap<String, Integer>();
 		score.put(playerOne,0);
 		score.put(playerTwo,0);
+		
+		playersAtuts = new HashMap<String, Boolean[]>();
+		playersAtuts.put(playerOne, new Boolean[4]);
+		playersAtuts.put(playerTwo, new Boolean[4]);
+		playerAtutsPresented = new HashMap<String, ArrayList<String>>();
+		playerAtutsPresented.put(playerOne, new ArrayList<String>());
+		playerAtutsPresented.put(playerTwo, new ArrayList<String>());
+		pointsIn10Rounds = new HashMap<String, Integer>();
+		pointsIn10Rounds.put(playerOne,0);
+		pointsIn10Rounds.put(playerTwo,0);
 	}
 	
 	public String resetAuction(String userName){
@@ -174,14 +211,32 @@ public class GameState{
 			turnsChanged.put(playerTwo,true);
 			bestOfferVal = 100;
 			auctionWinner = playerOne;
-			whoseAuctionTurn = playerOne;
+			whoseAuctionTurn = withWho.get(playerOne);
 			auctionEnded = false;
 		}
 		return "ok";
 	}
 	
+	private int rounds = 0;
+	private HashMap<String, Integer> pointsIn10Rounds;
+	
 	public String endRound(String userName){
-		return bestCardUser + "@" + withWho.get(bestCardUser) + "@" + Integer.toString(score.get(userName)) + "@" + Integer.toString(score.get(withWho.get(userName)));
+		if(rounds == 9){
+			rounds = 0;
+			if(auctionWinner.equals(userName)){
+				if (bestOfferVal < pointsIn10Rounds.get(userName)){
+					int val = score.get(userName);
+					 score.put(userName, val - bestOfferVal);
+				}
+				else{
+					int val = score.get(userName);
+					 score.put(userName, val + bestOfferVal);
+				}
+			}
+			pointsIn10Rounds.put(userName,0);
+		}else rounds ++;
+		return bestCardUser + "@" + withWho.get(bestCardUser) + "@" + Integer.toString(pointsIn10Rounds.get(userName)) + "@" + Integer.toString(pointsIn10Rounds.get(withWho.get(userName))) + "@" + 
+		score.get(userName) + "@" + score.get(withWho.get(userName)) +  "@" + atutColor;
 	}
 	
 	public String playerMoveChange(String userName) throws Exception{
@@ -212,6 +267,17 @@ public class GameState{
 			movesCounter = 1;
 			winningColor = card.split("_")[1];
 			bestCardUser = userName;
+			String figure = card.split("_")[0];
+			String color = card.split("_")[1];
+			if(figure.equals("king") || figure.equals("dama")){
+				if (!playerAtutsPresented.get(userName).contains(color)){
+					atutColor = color;
+					HashMap<String, Integer> atutValue = new HashMap<String,Integer>();
+					atutValue.put("pik",40); atutValue.put("trefl",60); atutValue.put("karo",80); atutValue.put("kier",100);
+					recentScore += atutValue.get(color);
+					playerAtutsPresented.get(userName).add(color);
+				}
+			}
 		}
 		else{
 			recentScore += cardValues.get(allCards[opponentCardIndex].split("_")[0]);
@@ -221,10 +287,14 @@ public class GameState{
 					bestCardUser = userName;
 					System.out.println(card + " is bigger than " + initialCard);
 				}
-				else System.out.println(initialCard + " is bigger than " + card);
+			}			
+			else if(card.split("_")[1].equals(atutColor)){
+				bestCardUser = userName;
+				System.out.println(card + " is bigger than " + initialCard);					
 			}
-			int bestPlayerScore = score.get(bestCardUser);
-			score.put(bestCardUser, recentScore + bestPlayerScore);
+			else System.out.println(initialCard + " is bigger than " + card);
+			int bestPlayerScore = pointsIn10Rounds.get(bestCardUser);
+			pointsIn10Rounds.put(bestCardUser, recentScore + bestPlayerScore);
 		}
 		isplayerMoveChanged.signalAll();
 		lock.unlock();
@@ -300,16 +370,15 @@ public class GameState{
 		}
 		else return "auctionEnded";
 	}
-	
+		
 	public String offer(String userName, int offerVal) throws Exception{
 		if(whoseAuctionTurn.equals(userName)){
 			lock.lock();
 			if(offerVal == -1){
 				auctionEnded = true;
-				auctionWinner = withWho.get(userName);
 				isBestOfferChanged.signalAll();
 				myAuctionTurn.signalAll();
-				isAuctionWon.signalAll();
+				isAuctionWon.signalAll();			
 				lock.unlock();
 				return "ok";
 			}
@@ -361,6 +430,8 @@ public class GameState{
 			}
 			playersCards.put(playersNames[0], playerOneCards);
 			playersCards.put(playersNames[1], playerTwoCards);
+			checkForAtuts(userName);
+			checkForAtuts(withWho.get(userName));
 		}
 		return "ok";
 	}

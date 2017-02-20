@@ -1,7 +1,3 @@
-// contract turn your_score opponent_score atut 
-// renew
-// atut
-// contract
 // winning condition
 
 function change_chat(event, input){
@@ -138,13 +134,14 @@ function endRound(){
 	var endRoundRq = new XMLHttpRequest();
 	endRoundRq.open("ENDROUND", request, false);
 	endRoundRq.send(null);
-	var msgParts = endRoundRq.responseText.split("@"); //whose_turn@last_In_round@myscore@enemy_score
+	var msgParts = endRoundRq.responseText.split("@"); //whose_turn@last_In_round@myscore@enemy_score@youroverallScore@opponentOverallScore@atutColor
 	$("#container").data("gameTurn", msgParts[0]);
 	$("#container").data("lastInRound", msgParts[1]);
 	$("#container").data("score", msgParts[2]);
 	document.getElementById("gameInfo").value = "Your score: " + msgParts[2];
 	document.getElementById("enemyScoreInfo").value = "Enemy score: " + msgParts[3];
-	document.getElementById("gameTurnInfo").value = msgParts[0] + "' turn";
+	document.getElementById("overAllScore").value = "Your score: " + msgParts[4] + "; Opponent's score: " + msgParts[5];
+	document.getElementById("atutInfo").value = "atut color: " + msgParts[6];
 	$("#container").data("phase", "play");
 	$("#container").data("enemyScore",msgParts[3]);
 	$("#container").data("myScore",msgParts[2]);
@@ -217,7 +214,7 @@ function cards_exchanged(request, responseText){
 	var gameTurnInfo = document.createElement("INPUT");
 	gameTurnInfo.id = "gameTurnInfo";
 	gameTurnInfo.readOnly = true;
-	gameTurnInfo.style.left = "25%";
+	gameTurnInfo.style.left = "35%";
 	gameTurnInfo.style.position = "absolute";
 	gameTurnInfo.style.top = "45%";	
 	gameTurnInfo.value = $("#container").data("gameTurn") + "'s turn";
@@ -225,7 +222,7 @@ function cards_exchanged(request, responseText){
 	var enemyScoreInfo = document.createElement("INPUT");
 	enemyScoreInfo.id = "enemyScoreInfo";
 	enemyScoreInfo.readOnly = true;
-	enemyScoreInfo.style.left = "35%";
+	enemyScoreInfo.style.left = "55%";
 	enemyScoreInfo.style.position = "absolute";
 	enemyScoreInfo.style.top = "45%";
 	enemyScoreInfo.value = "Enemy score: " + $("#container").data("enemyScore");
@@ -233,23 +230,33 @@ function cards_exchanged(request, responseText){
 	var contractInfo = document.createElement("INPUT");
 	contractInfo.id = "contractInfo";
 	contractInfo.readOnly = true;
-	contractInfo.style.left = "45%";
+	contractInfo.style.left = "55%";
 	contractInfo.style.position = "absolute";
-	contractInfo.style.top = "45%";
+	contractInfo.style.top = "50%";
 	contractInfo.value = "contract: " + $("#container").data("contract");
 	
 	var atutInfo = document.createElement("INPUT");
 	atutInfo.id = "atutInfo";
 	atutInfo.readOnly = true;
-	atutInfo.style.left = "55%";
+	atutInfo.style.left = "75%";
 	atutInfo.style.position = "absolute";
-	atutInfo.style.top = "45%";
+	atutInfo.style.top = "50%";
 	atutInfo.value = "atut color: none";
+	
+	var overAllScore = document.createElement("INPUT");
+	overAllScore.id = "overAllScore";
+	overAllScore.readOnly = true;
+	overAllScore.style.left = "15%";
+	overAllScore.style.position = "absolute";
+	overAllScore.style.top = "50%";
+	overAllScore.value = "Your overall score: 0; Opponent's overall score: 0";
+	overAllScore.setAttribute("size", overAllScore.value.length);
 	
 	document.getElementById("container").appendChild(gameInfo);
 	document.getElementById("container").appendChild(gameTurnInfo);
 	document.getElementById("container").appendChild(enemyScoreInfo);
 	document.getElementById("container").appendChild(contractInfo);
+	document.getElementById("container").appendChild(overAllScore);
 	document.getElementById("container").appendChild(atutInfo);
 	sendAsynchHTTPQuery(request, enemyMove, "PLAYERMOVECHANGE");
 	$("#container").data("phase","play");

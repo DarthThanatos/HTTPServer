@@ -210,6 +210,9 @@ public class GameKeeper{
 			if (players_added==1) {
 				//System.out.println("\n\n\none player\n\n\n");
 				gameWon.signalAll();
+				fullTable.signalAll();
+				historyChanged.signalAll();
+				gs.closeThreads();
 				lock.unlock();
 				return true;
 			}
@@ -219,6 +222,8 @@ public class GameKeeper{
 			winMsg.put(userName,"You lost, because you have left the table");
 			players_added--;
 			gameWon.signalAll();
+			fullTable.signalAll();
+			historyChanged.signalAll();
 			gs.closeThreads();
 			lock.unlock();
 			return false;
